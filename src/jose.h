@@ -107,6 +107,20 @@ LUALIB_API int luaopen_jose_rsa( lua_State *L );
 
 // metanames
 // module definition register
+static inline int jose_define_method( lua_State *L, struct luaL_Reg method[] )
+{
+    struct luaL_Reg *ptr = method;
+    
+    // methods
+    lua_newtable( L );
+    do {
+        lstate_fn2tbl( L, ptr->name, ptr->func );
+        ptr++;
+    } while( ptr->name );
+    
+    return 1;
+}
+
 static inline int jose_define_mt( lua_State *L, const char *tname, 
                                   struct luaL_Reg mmethod[], 
                                   struct luaL_Reg method[] )
@@ -122,12 +136,7 @@ static inline int jose_define_mt( lua_State *L, const char *tname,
     } while( ptr->name );
     // methods
     lua_pushstring( L, "__index" );
-    lua_newtable( L );
-    ptr = method;
-    do {
-        lstate_fn2tbl( L, ptr->name, ptr->func );
-        ptr++;
-    } while( ptr->name );
+    jose_define_method( L, method );
     lua_rawset( L, -3 );
     lua_pop( L, 1 );
 
