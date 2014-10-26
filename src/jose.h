@@ -85,6 +85,12 @@
     lua_rawset(L,-3); \
 }while(0)
 
+#define lstate_strn2tbl(L,k,v,n) do{ \
+    lua_pushstring(L,k); \
+    lua_pushlstring(L,v,n); \
+    lua_rawset(L,-3); \
+}while(0)
+
 #define lstate_num2tbl(L,k,v) do{ \
     lua_pushstring(L,k); \
     lua_pushnumber(L,v); \
