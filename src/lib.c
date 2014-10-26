@@ -55,12 +55,15 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     // digest
     luaopen_jose_digest( L );
     lua_setfield( L, -2, "digest" );
-    // rsa
-    luaopen_jose_rsa( L );
-    lua_setfield( L, -2, "rsa" );
     // hmac
     luaopen_jose_hmac( L );
     lua_setfield( L, -2, "hmac" );
+    // rsa
+    luaopen_jose_rsa( L );
+    lua_setfield( L, -2, "rsa" );
+    // key-pair generator
+    luaopen_jose_generate( L );
+    lua_setfield( L, -2, "generate" );
     // cleanup function
     lstate_fn2tbl( L, "dispose", dispose_lua );
     
