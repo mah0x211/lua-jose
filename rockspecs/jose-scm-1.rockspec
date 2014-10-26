@@ -30,7 +30,8 @@ build = {
                 "src/base64.c",
                 "src/digest.c",
                 "src/hmac.c",
-                "src/rsa.c"
+                "src/rsa.c",
+                "src/generate.c"
             },
             libraries = {
                 "ssl"
