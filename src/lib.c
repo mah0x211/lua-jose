@@ -66,9 +66,9 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     
     // constants
     // algorithms
-    lstate_num2tbl( L, "SHA256", NID_sha256 );
-    lstate_num2tbl( L, "SHA384", NID_sha384 );
-    lstate_num2tbl( L, "SHA512", NID_sha512 );
+    lstate_num2tbl( L, "SHA256", JOSE_NID_SHA256 );
+    lstate_num2tbl( L, "SHA384", JOSE_NID_SHA384 );
+    lstate_num2tbl( L, "SHA512", JOSE_NID_SHA512 );
     
     return 1;
 }

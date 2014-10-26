@@ -364,27 +364,31 @@ static int gc_lua( lua_State *L )
 static int alloc_lua( lua_State *L )
 {
     int nid = luaL_checkint( L, 1 );
-    const EVP_MD *md = jose_nid2evp_md( nid );
     const char *errstr = "unsupported NID type";
     
-    if( md )
+    if( ( nid = jose_nid2rsa_nid( nid ) ) != -1 )
     {
-        jose_rsa_t *j = lua_newuserdata( L, sizeof( jose_rsa_t ) );
+        const EVP_MD *md = jose_nid2evp_md( nid );
         
-        if( j )
+        if( md )
         {
-            if( ( j->rsa = RSA_new() ) ){
-                j->nid = nid;
-                j->md = (EVP_MD*)md;
-                j->verified = 0;
-                luaL_getmetatable( L, JOSE_RSA_MT );
-                lua_setmetatable( L, -2 );
-                return 1;
+            jose_rsa_t *j = lua_newuserdata( L, sizeof( jose_rsa_t ) );
+            
+            if( j )
+            {
+                if( ( j->rsa = RSA_new() ) ){
+                    j->nid = nid;
+                    j->md = (EVP_MD*)md;
+                    j->verified = 0;
+                    luaL_getmetatable( L, JOSE_RSA_MT );
+                    lua_setmetatable( L, -2 );
+                    return 1;
+                }
+                errstr = ERR_error_string( ERR_get_error(), NULL );
             }
-            errstr = ERR_error_string( ERR_get_error(), NULL );
-        }
-        else {
-            errstr = strerror( errno );
+            else {
+                errstr = strerror( errno );
+            }
         }
     }
     

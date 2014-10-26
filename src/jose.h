@@ -143,6 +143,28 @@ static inline int jose_define_mt( lua_State *L, const char *tname,
 
 // helper functions
 // check NID type
+typedef enum {
+    JOSE_NID_SHA256 = 256,
+    JOSE_NID_SHA384 = 384,
+    JOSE_NID_SHA512 = 512
+} jose_nid_e;
+
+
+static inline int jose_nid2rsa_nid( jose_nid_e nid )
+{
+    switch( nid ){
+        case JOSE_NID_SHA256:
+            return NID_sha256;
+        case JOSE_NID_SHA384:
+            return NID_sha384;
+        case JOSE_NID_SHA512:
+            return NID_sha512;
+        // unsupported NID type
+        default:
+            return -1;
+    }
+}
+
 static inline const EVP_MD *jose_nid2evp_md( const int nid )
 {
     switch( nid ){

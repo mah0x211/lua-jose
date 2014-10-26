@@ -109,24 +109,28 @@ static int alloc_lua( lua_State *L )
     int nid = luaL_checkint( L, 1 );
     size_t len = 0;
     const char *key = luaL_checklstring( L, 2, &len );
-    const EVP_MD *md = jose_nid2evp_md( nid );
     const char *errstr = "unsupported NID type";
     
-    if( md )
+    if( ( nid = jose_nid2rsa_nid( nid ) ) != -1 )
     {
-        jose_hmac_t *j = lua_newuserdata( L, sizeof( jose_hmac_t ) );
+        const EVP_MD *md = jose_nid2evp_md( nid );
         
-        if( j && ( j->key = pnalloc( len + 1, const char ) ) ){
-            memcpy( (void*)j->key, key, len );
-            ((char*)j->key)[len] = 0;
-            j->len = len;
-            j->md = (EVP_MD*)md;
-            luaL_getmetatable( L, JOSE_HMAC_MT );
-            lua_setmetatable( L, -2 );
-            return 1;
-        }
-        else {
-            errstr = strerror( errno );
+        if( md )
+        {
+            jose_hmac_t *j = lua_newuserdata( L, sizeof( jose_hmac_t ) );
+            
+            if( j && ( j->key = pnalloc( len + 1, const char ) ) ){
+                memcpy( (void*)j->key, key, len );
+                ((char*)j->key)[len] = 0;
+                j->len = len;
+                j->md = (EVP_MD*)md;
+                luaL_getmetatable( L, JOSE_HMAC_MT );
+                lua_setmetatable( L, -2 );
+                return 1;
+            }
+            else {
+                errstr = strerror( errno );
+            }
         }
     }
     
