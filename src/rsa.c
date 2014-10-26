@@ -294,21 +294,33 @@ static int set_prvkey_lua( lua_State *L )
     jose_rsa_t *j = luaL_checkudata( L, 1, JOSE_RSA_MT );
     size_t len = 0;
     const char *pem = luaL_checklstring( L, 2, &len );
-    BIO *mem = BIO_new_mem_buf( (void*)pem, len );
+    const char *pswd = NULL;
+    BIO *mem = NULL;
     const char *errstr = NULL;
     
-    if( !mem ){
+    // check password
+    if( lua_gettop( L ) > 2 && !lua_isnil( L, 3 ) ){
+        pswd = luaL_checkstring( L, 3 );
+    }
+    
+    if( !( mem = BIO_new_mem_buf( (void*)pem, len ) ) ){
         errstr = strerror( errno );
     }
     else
     {
-        if( !( PEM_read_bio_RSAPrivateKey( mem, &j->rsa, NULL, NULL ) ) ){
+        OpenSSL_add_all_ciphers();
+        if( !( PEM_read_bio_RSAPrivateKey( mem, &j->rsa, NULL, (void*)pswd ) ) ){
+            SSL_load_error_strings();
             errstr = ERR_error_string( ERR_get_error(), NULL );
+            ERR_free_strings();
         }
         else if( !( j->verified = RSA_check_key( j->rsa ) ) ){
             errstr = "invalid private key";
         }
+        
+        EVP_cleanup();
         BIO_free( mem );
+        
     }
     
     // got error
