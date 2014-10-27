@@ -158,6 +158,14 @@ static inline int jose_define_mt( lua_State *L, const char *tname,
 
 
 // helper functions
+static inline void jose_push_sslerror( lua_State *L )
+{
+    SSL_load_error_strings();
+    lua_pushstring( L, ERR_error_string( ERR_get_error(), NULL ) );
+    ERR_free_strings();
+}
+
+
 // check NID type
 typedef enum {
     JOSE_NID_SHA256 = 256,
