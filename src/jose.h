@@ -99,6 +99,7 @@
 
 
 // define module names
+#define JOSE_DIGEST_MT  "jose.digest"
 #define JOSE_HMAC_MT    "jose.hmac"
 #define JOSE_RSA_MT     "jose.rsa"
 
@@ -276,27 +277,6 @@ static inline int jose_hexdecode( char *dest, unsigned char *src, size_t len )
 }
 
 // MARK: digest
-// return error sting
-static inline const char *jose_digest( unsigned char *dest, size_t *dlen, 
-                                       const char *msg, size_t len, 
-                                       const EVP_MD *md )
-{
-    EVP_MD_CTX *ctx = EVP_MD_CTX_create();
-    
-    if( ctx )
-    {
-        if( EVP_DigestInit_ex( ctx, md, NULL ) && 
-            EVP_DigestUpdate( ctx, msg, len ) &&
-            EVP_DigestFinal_ex( ctx, dest, (unsigned int*)dlen ) ){
-            EVP_MD_CTX_destroy( ctx );
-            return NULL;
-        }
-        EVP_MD_CTX_destroy( ctx );
-    }
-    
-    // return error string
-    return ERR_error_string( ERR_get_error(), NULL );
-}
 
 // MARK: hmac
 static inline void jose_hmac( unsigned char *dest, size_t *dlen, 
