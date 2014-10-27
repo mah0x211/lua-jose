@@ -55,11 +55,11 @@ static int decode_lua( lua_State *L )
     size_t len = 0;
     unsigned char *src = (unsigned char*)luaL_checklstring( L, 1, &len );
     size_t dlen = len / 2;
-    const char *dest = pnalloc( dlen + 1, const char );
+    char *dest = pnalloc( dlen + 1, char );
     
     if( dest )
     {
-        if( jose_hexdecode( (unsigned char*)dest, src, len ) == 0 ){
+        if( jose_hexdecode( dest, src, len ) == 0 ){
             lua_pushlstring( L, dest, dlen );
             pdealloc( dest );
             return 1;

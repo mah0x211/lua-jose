@@ -230,8 +230,7 @@ static inline void jose_hexencode( unsigned char *dest, unsigned char *src,
 
 // src length must be multiple of two
 // dest length must be greater than len/2 + 1(null-term)
-static inline int jose_hexdecode( unsigned char *dest, unsigned char *src, 
-                                  size_t len )
+static inline int jose_hexdecode( char *dest, unsigned char *src, size_t len )
 {
     static const char hex2dec[256] = {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -243,9 +242,18 @@ static inline int jose_hexdecode( unsigned char *dest, unsigned char *src,
         10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
     //  a   b   c   d   e   f
-        10, 11, 12, 13, 14, 15
+        10, 11, 12, 13, 14, 15,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
-	unsigned char *ptr = dest;
+    char *ptr = dest;
 	size_t i = 0;
 	
     // invalid length
@@ -254,7 +262,12 @@ static inline int jose_hexdecode( unsigned char *dest, unsigned char *src,
         return -1;
     }
     
-	for(; i < len; i += 2 ){
+	for(; i < len; i += 2 )
+    {
+        if( hex2dec[src[i]] == -1 || hex2dec[src[i+1]] == -1 ){
+            errno = EINVAL;
+            return -1;
+        }
         *ptr++ = hex2dec[src[i]] << 4 | hex2dec[src[i+1]];
 	}
 	*ptr = 0;
