@@ -1,4 +1,4 @@
-local jose = require('jose.lib');
+local lib = require('jose.lib');
 local key = 'test key';
 local DIGESTS = {
     sha1    = { 
@@ -23,11 +23,52 @@ local DIGESTS = {
     }
 };
 
-local function digest( src )
-    for k, v in pairs( DIGESTS ) do
-        ifNotEqual( jose.digest[k]( src, v.key ), v.res );
-    end
+local function create( k, key, src, fmt )
+    local h = ifNil( lib.hmac.new( k, key ) );
+    
+    ifNotTrue( h:update( src ) );
+    
+    return ifNil( h:final( fmt ) );
 end
 
+
+local function digest( src )
+    local buf, hex, ghex;
+    
+    for k, v in pairs( DIGESTS ) do
+        hex = create( k, v.key, src );
+        ifNotEqual( hex, v.res );
+        
+        ghex = ifNil( lib.hmac.gen( k, v.key, src ) );
+        ifNotEqual( ghex, v.res );
+        
+        -- raw memory check
+        buf = ifNil( lib.buffer( hex, lib.FMT_HEX ) );
+        ifNotTrue( 
+            buf:compare( 
+                create( k, v.key, src, lib.FMT_BASE64 ), 
+                lib.FMT_BASE64 
+            )
+        );
+        ifNotTrue( 
+            buf:compare( 
+                create( k, v.key, src, lib.FMT_BASE64URL ), 
+                lib.FMT_BASE64URL 
+            )
+        );
+        ifNotTrue( 
+            buf:compare( 
+                lib.hmac.gen( k, v.key, src, lib.FMT_BASE64 ), 
+                lib.FMT_BASE64 
+            )
+        );
+        ifNotTrue( 
+            buf:compare( 
+                lib.hmac.gen( k, v.key, src, lib.FMT_BASE64URL ), 
+                lib.FMT_BASE64URL
+            )
+        );
+    end
+end
 
 digest( '{"baz":"hello","foo":{"bar":1}}' );
