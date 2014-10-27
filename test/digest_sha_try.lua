@@ -1,4 +1,4 @@
-local jose = require('jose.lib');
+local lib = require('jose.lib');
 local DIGESTS = {
     sha1    = 'bb6b6554504a4fec2f64f493ed2be2d0c447dbdb',
     sha224  = 'b82f368fd62553945745741502a2c46ee94ce16b83a044f569e68789',
@@ -7,9 +7,52 @@ local DIGESTS = {
     sha512  = '7708d97f4f251cb91f9ac1df4bcc282514d57e05f8cfa652a2bca063645a8974a74d6b7a3634aba7a5539f559aedc7f3a6dc587d7828fa913035bd5e83840b3e'
 };
 
+
+local function create( k, src, fmt )
+    local d = ifNil( lib.digest.new( k ) );
+    
+    ifNotTrue( d:update( src ) );
+    
+    return ifNil( d:final( fmt ) );
+end
+
+
 local function digest( src )
+    local buf, hex, ghex;
+    
     for k, v in pairs( DIGESTS ) do
-        ifNotEqual( jose.digest[k]( src ), v );
+        hex = create( k, src );
+        ifNotEqual( hex, v );
+        
+        ghex = ifNil( lib.digest.gen( k, src ) );
+        ifNotEqual( ghex, v );
+        
+        -- raw memory check
+        buf = ifNil( lib.buffer( hex, lib.FMT_HEX ) );
+        ifNotTrue( 
+            buf:compare( 
+                create( k, src, lib.FMT_BASE64 ), 
+                lib.FMT_BASE64 
+            ) 
+        );
+        ifNotTrue( 
+            buf:compare( 
+                create( k, src, lib.FMT_BASE64URL ), 
+                lib.FMT_BASE64URL 
+            )
+        );
+        ifNotTrue( 
+            buf:compare( 
+                lib.digest.gen( k, src, lib.FMT_BASE64 ), 
+                lib.FMT_BASE64 
+            )
+        );
+        ifNotTrue( 
+            buf:compare( 
+                lib.digest.gen( k, src, lib.FMT_BASE64URL ), 
+                lib.FMT_BASE64URL
+            )
+        );
     end
 end
 
