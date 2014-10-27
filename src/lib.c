@@ -46,6 +46,9 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     //OPENSSL_config( NULL );
     
     lua_newtable( L );
+    // buffer
+    luaopen_jose_buffer( L );
+    lua_setfield( L, -2, "buffer" );
     // hex
     luaopen_jose_hex( L );
     lua_setfield( L, -2, "hex" );

@@ -99,12 +99,14 @@
 
 
 // define module names
+#define JOSE_BUFFER_MT  "jose.buffer"
 #define JOSE_DIGEST_MT  "jose.digest"
 #define JOSE_HMAC_MT    "jose.hmac"
 #define JOSE_RSA_MT     "jose.rsa"
 
-// define prototypes
+// MARK: define prototypes
 LUALIB_API int luaopen_jose_lib( lua_State *L );
+LUALIB_API int luaopen_jose_buffer( lua_State *L );
 LUALIB_API int luaopen_jose_hex( lua_State *L );
 LUALIB_API int luaopen_jose_base64( lua_State *L );
 LUALIB_API int luaopen_jose_digest( lua_State *L );
@@ -112,6 +114,8 @@ LUALIB_API int luaopen_jose_hmac( lua_State *L );
 LUALIB_API int luaopen_jose_rsa( lua_State *L );
 LUALIB_API int luaopen_jose_generate( lua_State *L );
 
+
+// MARK: helper functions
 
 // metanames
 // module definition register
@@ -158,7 +162,6 @@ static inline int jose_define_mt( lua_State *L, const char *tname,
 })
 
 
-// helper functions
 static inline void jose_push_sslerror( lua_State *L )
 {
     SSL_load_error_strings();
