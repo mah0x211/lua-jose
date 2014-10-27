@@ -26,71 +26,60 @@
  *
  */
 
-#include "jose.h"
+#include "jose_hmac.h"
 
-typedef struct {
-    EVP_MD *md;
-    const char *key;
-    size_t len;
-} jose_hmac_t;
+#define MODULE_MT   JOSE_HMAC_MT
 
 
-static int verify_lua( lua_State *L )
+static int final_lua( lua_State *L )
 {
-    jose_hmac_t *j = luaL_checkudata( L, 1, JOSE_HMAC_MT );
+    jose_hmac_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_fmt_e fmt = jose_check_validfmt( L, 2, JOSE_FMT_HEX );
+    unsigned char digest[EVP_MAX_MD_SIZE];
     size_t len = 0;
-    const char *msg = luaL_checklstring( L, 2, &len );
-    size_t slen = 0;
-    unsigned char *sig = (unsigned char*)luaL_checklstring( L, 3, &slen );
-    unsigned char *bin = (unsigned char*)b64m_decode_url( sig, &slen );
     
-    if( bin ){
-        unsigned char digest[EVP_MAX_MD_SIZE];
-        size_t dlen = 0;
-        
-        jose_hmac( digest, &dlen, j->key, j->len, msg, len, j->md );
-        lua_pushboolean( L, memcmp( digest, bin, slen ) == 0 );
-        pdealloc( bin );
-        
-        return 1;
+    // check format type
+    if( fmt == JOSE_FMT_INVAL ){
+        lua_pushnil( L );
+        lua_pushstring( L, "invalid format type" );
+        return 2;
     }
-    
-    // got error
-    lua_pushboolean( L, 0 );
-    lua_pushstring( L, strerror( errno ) );
-    
-    return 2;
+    else if( jose_hmac_final( j, digest, &len ) != 1 ){
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        return 2;
+    }
+    else if( jose_pushfmtstr( L, fmt, digest, len ) == -1 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+
+    return 1;
 }
 
 
-static int sign_lua( lua_State *L )
+static int update_lua( lua_State *L )
 {
-    jose_hmac_t *j = luaL_checkudata( L, 1, JOSE_HMAC_MT );
+    jose_hmac_t *j = luaL_checkudata( L, 1, MODULE_MT );
     size_t len = 0;
     const char *msg = luaL_checklstring( L, 2, &len );
-    unsigned char digest[EVP_MAX_MD_SIZE];
-    size_t dlen = 0;
-    const char *b64 = NULL;
     
-    // check argument
-    jose_hmac( digest, &dlen, j->key, j->len, msg, len, j->md );
-    if( ( b64 = b64m_encode_url( digest, &dlen ) ) ){
-        lua_pushstring( L, b64 );
-        pdealloc( b64 );
-        return 1;
+    if( EVP_DigestSignUpdate( j->ctx, msg, (unsigned int)len ) != 1 ){
+        lua_pushboolean( L, 0 );
+        jose_push_sslerror( L );
+        return 2;
     }
+
+    lua_pushboolean( L, 1 );
     
-    // got error
-    lua_pushnil( L );
-    lua_pushstring( L, strerror( errno ) );
-    
-    return 2;
+    return 1;
 }
 
 
 static int tostring_lua( lua_State *L )
 {
-    return jose_tostring( L, JOSE_HMAC_MT );
+    return jose_tostring( L, MODULE_MT );
 }
 
 
@@ -98,7 +87,7 @@ static int gc_lua( lua_State *L )
 {
     jose_hmac_t *j = lua_touserdata( L, 1 );
     
-    pdealloc( j->key );
+    EVP_MD_CTX_destroy( j->ctx );
     
     return 0;
 }
@@ -106,39 +95,85 @@ static int gc_lua( lua_State *L )
 
 static int alloc_lua( lua_State *L )
 {
-    int nid = luaL_checkint( L, 1 );
+    const char *name = luaL_checkstring( L, 1 );
     size_t len = 0;
     const char *key = luaL_checklstring( L, 2, &len );
-    const char *errstr = "unsupported NID type";
+    const EVP_MD *md = EVP_get_digestbyname( name );
+    EVP_PKEY *pk = NULL;
+    jose_hmac_t *j = NULL;
     
-    if( ( nid = jose_nid2rsa_nid( nid ) ) != -1 )
-    {
-        const EVP_MD *md = jose_nid2evp_md( nid );
-        
-        if( md )
-        {
-            jose_hmac_t *j = lua_newuserdata( L, sizeof( jose_hmac_t ) );
-            
-            if( j && ( j->key = pnalloc( len + 1, const char ) ) ){
-                memcpy( (void*)j->key, key, len );
-                ((char*)j->key)[len] = 0;
-                j->len = len;
-                j->md = (EVP_MD*)md;
-                luaL_getmetatable( L, JOSE_HMAC_MT );
-                lua_setmetatable( L, -2 );
-                return 1;
-            }
-            else {
-                errstr = strerror( errno );
-            }
-        }
+    if( !md ){
+        lua_pushnil( L );
+        lua_pushfstring( L, "unsupported digest algorithm: %s", name );
+        return 2;
+    }
+    else if( !( j = lua_newuserdata( L, sizeof( jose_hmac_t ) ) ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    else if( !( j->ctx = EVP_MD_CTX_create() ) ){
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        return 2;
+    }
+    else if( !( pk = EVP_PKEY_new_mac_key( EVP_PKEY_HMAC, NULL, 
+                                           (const unsigned char*)key, len ) ) ){
+        EVP_MD_CTX_destroy( j->ctx );
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        return 2;
+    }
+    else if( EVP_DigestSignInit( j->ctx, NULL, md, NULL, pk ) != 1 ){
+        EVP_PKEY_free( pk );
+        EVP_MD_CTX_destroy( j->ctx );
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        return 2;
     }
     
-    // got error
-    lua_pushnil( L );
-    lua_pushstring( L, errstr );
+    luaL_getmetatable( L, MODULE_MT );
+    lua_setmetatable( L, -2 );
     
-    return 2;
+    return 1;
+}
+
+
+static int gen_lua( lua_State *L )
+{
+    const char *name = luaL_checkstring( L, 1 );
+    size_t klen = 0;
+    const char *key = luaL_checklstring( L, 2, &klen );
+    size_t len = 0;
+    const char *msg = luaL_checklstring( L, 3, &len );
+    jose_fmt_e fmt = jose_check_validfmt( L, 4, JOSE_FMT_HEX );
+    const EVP_MD *md = EVP_get_digestbyname( name );
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    size_t dlen = 0;
+    
+    // invalid format type
+    if( fmt == JOSE_FMT_INVAL ){
+        lua_pushnil( L );
+        lua_pushstring( L, "invalid format type" );
+        return 2;
+    }
+    else if( !md ){
+        lua_pushnil( L );
+        lua_pushfstring( L, "unsupported digest algorithm: %s", name );
+        return 2;
+    }
+    else if( jose_hmac( digest, &dlen, key, klen, msg, len, md ) != 1 ){
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        return 2;
+    }
+    else if( jose_pushfmtstr( L, fmt, digest, dlen ) == -1 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+
+    return 1;
 }
 
 
@@ -150,14 +185,16 @@ LUALIB_API int luaopen_jose_hmac( lua_State *L )
         { NULL, NULL }
     };
     struct luaL_Reg method[] = {
-        { "sign", sign_lua },
-        { "verify", verify_lua },
+        { "update", update_lua },
+        { "final", final_lua },
         { NULL, NULL }
     };
     
-    jose_define_mt( L, JOSE_HMAC_MT, mmethod, method );
-    // add allocation method
-    lua_pushcfunction( L, alloc_lua );
+    jose_define_mt( L, MODULE_MT, mmethod, method );
+    
+    lua_createtable( L, 0, 2 );
+    lstate_fn2tbl( L, "new", alloc_lua );
+    lstate_fn2tbl( L, "gen", gen_lua );
     
     return 1;
 }

@@ -276,22 +276,5 @@ static inline int jose_hexdecode( char *dest, unsigned char *src, size_t len )
     return 0;
 }
 
-// MARK: digest
-
-// MARK: hmac
-static inline void jose_hmac( unsigned char *dest, size_t *dlen, 
-                              const char *key, size_t klen, 
-                              const char *msg, size_t len, 
-                              const EVP_MD *md )
-{
-    HMAC_CTX ctx;
-    
-    HMAC_CTX_init( &ctx );
-    HMAC_Init( &ctx, (const void*)key, (int)klen, md );
-    HMAC_Update( &ctx, (unsigned char*)msg, (int)len );
-    HMAC_CTX_set_flags( &ctx, EVP_MD_CTX_FLAG_ONESHOT);
-    HMAC_Final( &ctx, dest, (unsigned int*)dlen );
-    HMAC_CTX_cleanup( &ctx );
-}
 
 #endif
