@@ -27,6 +27,73 @@
  */
 
 #include "jose.h"
+#include <ctype.h>
+
+
+static inline void nameconv( char *dest, const char *src, size_t len )
+{
+    size_t i = 0;
+    
+    // name conversion
+    for(; i < len; i++ )
+    {
+        // hyphen to underscore
+        if( src[i] == '-' ){
+            dest[i] = '_';
+        }
+        // lower to uppercase
+        else {
+            dest[i] = toupper( src[i] );
+        }
+    }
+    dest[len] = 0;
+}
+
+
+static inline void add_name( const char *from, const char *to, void *arg )
+{
+    if( !to ){
+        lua_State *L = (lua_State*)arg;
+        static char fname[255];
+        
+        nameconv( fname, from, strlen( from ) );
+        lstate_str2tbl( L, fname, from );
+    }
+}
+
+static void add_cipher_name( const EVP_CIPHER *ciph, const char *from, 
+                             const char *to, void *arg ){
+    add_name( from, to, arg );
+}
+
+static void add_digest_name( const EVP_MD *md, const char *from, const char *to,
+                             void *arg ){
+    add_name( from, to, arg );
+}
+
+static int constants_lua( lua_State *L )
+{
+    // constants
+    lua_newtable( L );
+    
+    // add cipher names
+    lua_newtable( L );
+    EVP_CIPHER_do_all_sorted( add_cipher_name, (void*)L );
+    lua_setfield( L, -2, "CIPHER" );
+    // add digest names
+    lua_newtable( L );
+    EVP_MD_do_all_sorted( add_digest_name, (void*)L );
+    lua_setfield( L, -2, "DIGEST" );
+    
+    // add result format
+    lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
+    lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
+    lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
+    lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
+    lua_setfield( L, -2, "constants" );
+    
+    return 1;
+}
 
 static int dispose_lua( lua_State *L )
 {
@@ -36,10 +103,13 @@ static int dispose_lua( lua_State *L )
     return 0;
 }
 
+
 LUALIB_API int luaopen_jose_lib( lua_State *L )
 {
     //SSL_load_error_strings();
     //SSL_library_init();
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
     //OpenSSL_add_all_algorithms();
     //ENGINE_load_builtin_engines();
     //ENGINE_register_all_complete();
@@ -70,18 +140,8 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     // cleanup function
     lstate_fn2tbl( L, "dispose", dispose_lua );
     
-    // constants
-    // algorithms
-    lstate_num2tbl( L, "SHA256", JOSE_NID_SHA256 );
-    lstate_num2tbl( L, "SHA384", JOSE_NID_SHA384 );
-    lstate_num2tbl( L, "SHA512", JOSE_NID_SHA512 );
-    // result format
-    lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
-    lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
-    lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
-    lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
-    
-    return 1;
+    // append constants
+    return constants_lua( L );
 }
 
 
