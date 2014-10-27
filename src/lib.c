@@ -72,6 +72,11 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     lstate_num2tbl( L, "SHA256", JOSE_NID_SHA256 );
     lstate_num2tbl( L, "SHA384", JOSE_NID_SHA384 );
     lstate_num2tbl( L, "SHA512", JOSE_NID_SHA512 );
+    // result format
+    lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
+    lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
+    lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
+    lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
     
     return 1;
 }

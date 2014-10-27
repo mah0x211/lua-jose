@@ -276,5 +276,102 @@ static inline int jose_hexdecode( char *dest, unsigned char *src, size_t len )
     return 0;
 }
 
+// MARK: push format string
+// format types
+typedef enum {
+    JOSE_FMT_INVAL      = -1,
+    JOSE_FMT_RAW        = 0,
+    // default
+    JOSE_FMT_HEX        = 1,
+    JOSE_FMT_BASE64,
+    JOSE_FMT_BASE64URL,
+} jose_fmt_e;
+
+static inline jose_fmt_e jose_check_validfmt( lua_State *L, int idx, 
+                                              jose_fmt_e fmt )
+{
+    // check format type
+    if( lua_gettop( L ) > ( idx - 1 ) && !lua_isnil( L, idx ) )
+    {
+        fmt = luaL_checkint( L, idx );
+        if( fmt < JOSE_FMT_HEX || fmt > JOSE_FMT_BASE64URL ){
+            return JOSE_FMT_INVAL;
+        }
+    }
+
+    return fmt;
+}
+
+// return 0 on success, -1 on failure
+static inline int jose_pushhex( lua_State *L, unsigned char *data, size_t len )
+{
+    // hex encoding
+    size_t bytes = len * 2;
+    const char *buf = pnalloc( bytes + 1, const char );
+    
+    // alloc error
+    if( !buf ){
+        return -1;
+    }
+    jose_hexencode( (unsigned char*)buf, data, len );
+    lua_pushlstring( L, buf, bytes );
+    pdealloc( buf );
+    
+    return 0;
+}
+
+// return 0 on success, -1 on failure
+static inline int jose_pushbase64( lua_State *L, unsigned char *data, 
+                                   size_t len )
+{
+    // base64 encoding
+    char *buf = b64m_encode_std( data, &len );
+    
+    // alloc error
+    if( !buf ){
+        return -1;
+    }
+    
+    lua_pushlstring( L, buf, len );
+    pdealloc( buf );
+    
+    return 0;
+}
+
+static inline int jose_pushbase64url( lua_State *L, unsigned char *data, 
+                                      size_t len )
+{
+    // base64url encoding
+    char *buf = b64m_encode_url( data, &len );
+    
+    // alloc error
+    if( !buf ){
+        return -1;
+    }
+    
+    lua_pushlstring( L, buf, len );
+    pdealloc( buf );
+    
+    return 0;
+}
+
+static inline int jose_pushfmtstr( lua_State *L, jose_fmt_e fmt,
+                                   unsigned char *data, size_t len )
+{
+    switch( fmt ){
+        case JOSE_FMT_RAW:
+            lua_pushlstring( L, (const char*)data, len );
+            return 0;
+        case JOSE_FMT_HEX:
+            return jose_pushhex( L, data, len );
+        case JOSE_FMT_BASE64:
+            return jose_pushbase64( L, data, len );
+        case JOSE_FMT_BASE64URL:
+            return jose_pushbase64url( L, data, len );
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+}
 
 #endif
