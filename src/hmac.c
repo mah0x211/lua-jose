@@ -88,6 +88,7 @@ static int gc_lua( lua_State *L )
     jose_hmac_t *j = lua_touserdata( L, 1 );
     
     EVP_MD_CTX_destroy( j->ctx );
+    EVP_PKEY_free( j->pk );
     
     return 0;
 }
@@ -99,7 +100,6 @@ static int alloc_lua( lua_State *L )
     size_t len = 0;
     const char *key = luaL_checklstring( L, 2, &len );
     const EVP_MD *md = EVP_get_digestbyname( name );
-    EVP_PKEY *pk = NULL;
     jose_hmac_t *j = NULL;
     
     if( !md ){
@@ -117,15 +117,16 @@ static int alloc_lua( lua_State *L )
         jose_push_sslerror( L );
         return 2;
     }
-    else if( !( pk = EVP_PKEY_new_mac_key( EVP_PKEY_HMAC, NULL, 
-                                           (const unsigned char*)key, len ) ) ){
+    else if( !( j->pk = EVP_PKEY_new_mac_key( EVP_PKEY_HMAC, NULL, 
+                                              (const unsigned char*)key, 
+                                              len ) ) ){
         EVP_MD_CTX_destroy( j->ctx );
         lua_pushnil( L );
         jose_push_sslerror( L );
         return 2;
     }
-    else if( EVP_DigestSignInit( j->ctx, NULL, md, NULL, pk ) != 1 ){
-        EVP_PKEY_free( pk );
+    else if( EVP_DigestSignInit( j->ctx, NULL, md, NULL, j->pk ) != 1 ){
+        EVP_PKEY_free( j->pk );
         EVP_MD_CTX_destroy( j->ctx );
         lua_pushnil( L );
         jose_push_sslerror( L );

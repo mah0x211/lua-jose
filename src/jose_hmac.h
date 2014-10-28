@@ -33,6 +33,7 @@
 
 typedef struct {
     EVP_MD_CTX *ctx;
+    EVP_PKEY *pk;
 } jose_hmac_t;
 
 
@@ -59,12 +60,11 @@ static inline int jose_hmac( unsigned char *sig, size_t *slen,
                                              (const unsigned char*)key, klen );
         if( pk )
         {
-            if( ( rc = EVP_DigestSignInit( ctx, NULL, md, NULL, pk ) ) != 1 ){
-                EVP_PKEY_free( pk );
-            }
-            else if( ( rc = EVP_DigestSignUpdate( ctx, msg, len ) ) == 1 ){
+            if( ( rc = EVP_DigestSignInit( ctx, NULL, md, NULL, pk ) ) == 1 &&
+                ( rc = EVP_DigestSignUpdate( ctx, msg, len ) ) == 1 ){
                 rc = EVP_DigestSignFinal( ctx, sig, slen );
             }
+            EVP_PKEY_free( pk );
         }
         
         EVP_MD_CTX_destroy( ctx );
