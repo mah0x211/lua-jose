@@ -31,6 +31,7 @@ build = {
                 "src/base64.c",
                 "src/digest.c",
                 "src/hmac.c",
+                "src/pkey.c",
                 "src/rsa.c",
                 "src/generate.c"
             },

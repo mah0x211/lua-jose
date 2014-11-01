@@ -129,6 +129,9 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     // hmac
     luaopen_jose_hmac( L );
     lua_setfield( L, -2, "hmac" );
+    // pkey
+    luaopen_jose_pkey( L );
+    lua_setfield( L, -2, "pkey" );
     // rsa
     luaopen_jose_rsa( L );
     lua_setfield( L, -2, "rsa" );
