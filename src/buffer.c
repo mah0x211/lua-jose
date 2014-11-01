@@ -45,7 +45,7 @@ static int compare_lua( lua_State *L )
     }
     
     if( fmt == JOSE_FMT_RAW ){
-        cmp = ( len == j->len && memcmp( data, j->buf, j->len ) == 0 );
+        cmp = ( len == j->len && memcmp( data, j->data, j->len ) == 0 );
     }
     else if( fmt == JOSE_FMT_HEX )
     {
@@ -68,7 +68,7 @@ static int compare_lua( lua_State *L )
                     errstr = strerror( errno );
                 }
                 else {
-                    cmp = ( memcmp( buf, j->buf, j->len ) == 0 );
+                    cmp = ( memcmp( buf, j->data, j->len ) == 0 );
                 }
                 pdealloc( buf );
             }
@@ -85,7 +85,7 @@ static int compare_lua( lua_State *L )
             errstr = strerror( errno );
         }
         else {
-            cmp = ( len == j->len && memcmp( buf, j->buf, j->len ) == 0 );
+            cmp = ( len == j->len && memcmp( buf, j->data, j->len ) == 0 );
             pdealloc( buf );
         }
     }
@@ -114,7 +114,7 @@ static int convert_lua( lua_State *L )
         fmt = luaL_checkint( L, 2 );
     }
     
-    if( jose_pushfmtstr( L, fmt, (unsigned char*)j->buf, j->len ) == -1 ){
+    if( jose_pushfmtstr( L, fmt, (unsigned char*)j->data, j->len ) == -1 ){
         lua_pushnil( L );
         lua_pushstring( L, "invalid format type" );
         return 2;
@@ -134,7 +134,7 @@ static int gc_lua( lua_State *L )
 {
     jose_buffer_t *j = lua_touserdata( L, 1 );
     
-    pdealloc( j->buf );
+    pdealloc( j->data );
     
     return 0;
 }
@@ -158,12 +158,12 @@ static int alloc_lua( lua_State *L )
     }
     else if( fmt == JOSE_FMT_RAW )
     {
-        if( !( j->buf = pnalloc( len + 1, char ) ) ){
+        if( !( j->data = pnalloc( len + 1, char ) ) ){
             errstr = strerror( errno );
         }
         else {
-            memcpy( j->buf, data, len );
-            j->buf[len] = 0;
+            memcpy( j->data, data, len );
+            j->data[len] = 0;
             j->len = len;
         }
     }
@@ -175,19 +175,19 @@ static int alloc_lua( lua_State *L )
         else
         {
             j->len = len / 2;
-            if( !( j->buf = pnalloc( j->len + 1, char ) ) ){
+            if( !( j->data = pnalloc( j->len + 1, char ) ) ){
                 errstr = strerror( errno );
             }
-            else if( jose_hexdecode( j->buf, (unsigned char*)data, len ) == -1 ){
+            else if( jose_hexdecode( j->data, (unsigned char*)data, len ) == -1 ){
                 errstr = strerror( errno );
-                pdealloc( j->buf );
+                pdealloc( j->data );
             }
         }
     }
     else if( fmt == JOSE_FMT_BASE64 || fmt == JOSE_FMT_BASE64URL )
     {
-        j->buf = b64m_decode_mix( (unsigned char*)data, &len );
-        if( !j->buf ){
+        j->data = b64m_decode_mix( (unsigned char*)data, &len );
+        if( !j->data ){
             errstr = strerror( errno );
         }
         else {

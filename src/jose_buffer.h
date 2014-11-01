@@ -32,7 +32,7 @@
 #include "jose.h"
 
 typedef struct {
-    char *buf;
+    char *data;
     size_t len;
 } jose_buffer_t;
 
