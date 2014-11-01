@@ -107,10 +107,8 @@ static int dispose_lua( lua_State *L )
 LUALIB_API int luaopen_jose_lib( lua_State *L )
 {
     //SSL_load_error_strings();
-    //SSL_library_init();
-    OpenSSL_add_all_ciphers();
-    OpenSSL_add_all_digests();
-    //OpenSSL_add_all_algorithms();
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
     //ENGINE_load_builtin_engines();
     //ENGINE_register_all_complete();
     //OPENSSL_config( NULL );
