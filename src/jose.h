@@ -377,4 +377,26 @@ static inline int jose_pushfmtstr( lua_State *L, jose_fmt_e fmt,
     }
 }
 
+
+// password index = idx + 1
+static inline int jose_getopt_cipher( lua_State *L, int idx,
+                                      const char **name,
+                                      const EVP_CIPHER **ciph,
+                                      const char **pswd, size_t *len )
+{
+    *name = luaL_optstring( L, idx, NULL );
+    if( *name )
+    {
+        *ciph = EVP_get_cipherbyname( *name );
+        if( !*ciph ){
+            return -1;
+        }
+        // password required
+        *pswd = luaL_checklstring( L, idx + 1, len );
+    }
+    
+    return 0;
+}
+
+
 #endif
