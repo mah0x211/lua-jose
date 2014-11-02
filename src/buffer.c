@@ -152,6 +152,22 @@ static int tobase64_lua( lua_State *L )
     return 1;
 }
 
+
+static int tobase64url_lua( lua_State *L )
+{
+    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    
+    if( jose_pushfmtstr( L, JOSE_FMT_BASE64URL, (unsigned char*)j->data, 
+                         j->len ) == -1 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    
+    return 1;
+}
+
+
 static int eq_lua( lua_State *L )
 {
     jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
@@ -282,6 +298,7 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L )
         { "convert", convert_lua },
         { "toHex", tohex_lua },
         { "toBase64", tobase64_lua },
+        { "toBase64URL", tobase64url_lua },
         { "compare", compare_lua },
         { NULL, NULL }
     };
