@@ -124,9 +124,39 @@ static int convert_lua( lua_State *L )
 }
 
 
+static int eq_lua( lua_State *L )
+{
+    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    size_t len = 0;
+    const char *str = NULL;
+    
+    switch( lua_type( L, 2 ) ){
+        case LUA_TSTRING:
+            str = lua_tolstring( L, -1, &len );
+        break;
+        case LUA_TUSERDATA:
+            if( lua_getmetatable( L, 2 ) )
+            {
+                lua_pop( L, 1 );
+                if( luaL_callmeta( L, 2, "__tostring" ) ){
+                    str = lua_tolstring( L, -1, &len );
+                }
+            }
+        break;
+    }
+
+    lua_pushboolean( L, len && len == j->len && 
+                     memcmp( str, j->data, j->len ) == 0 );
+    return 1;
+}
+
+
 static int tostring_lua( lua_State *L )
 {
-    return jose_tostring( L, MODULE_MT );
+    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    
+    lua_pushlstring( L, j->data, j->len );
+    return 1;
 }
 
 
@@ -217,6 +247,7 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L )
     struct luaL_Reg mmethod[] = {
         { "__gc", gc_lua },
         { "__tostring", tostring_lua },
+        { "__eq", eq_lua },
         { NULL, NULL }
     };
     struct luaL_Reg method[] = {
