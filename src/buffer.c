@@ -204,6 +204,15 @@ static int tostring_lua( lua_State *L )
 }
 
 
+static int len_lua( lua_State *L )
+{
+    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    
+    lua_pushinteger( L, j->len );
+    return 1;
+}
+
+
 static int gc_lua( lua_State *L )
 {
     jose_buffer_t *j = lua_touserdata( L, 1 );
@@ -292,6 +301,7 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L )
         { "__gc", gc_lua },
         { "__tostring", tostring_lua },
         { "__eq", eq_lua },
+        { "__len", len_lua },
         { NULL, NULL }
     };
     struct luaL_Reg method[] = {
