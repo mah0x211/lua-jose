@@ -26,7 +26,6 @@
  *
  */
 
-#include "jose.h"
 #include "jose_pkey.h"
 
 #define MODULE_MT   JOSE_PKEY_MT

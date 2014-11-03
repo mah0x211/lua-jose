@@ -32,7 +32,6 @@
 #include "jose_util.h"
 
 // define module names
-#define JOSE_PKEY_MT    "jose.pkey"
 #define JOSE_RSA_MT     "jose.rsa"
 
 // MARK: define prototypes

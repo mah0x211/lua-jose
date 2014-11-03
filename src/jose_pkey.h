@@ -29,7 +29,9 @@
 #ifndef ___JOSE_PKEY_LUA___
 #define ___JOSE_PKEY_LUA___
 
-#include "jose.h"
+#include "jose_ssl.h"
+
+#define JOSE_PKEY_MT    "jose.pkey"
 
 typedef struct {
     EVP_PKEY *pk;
