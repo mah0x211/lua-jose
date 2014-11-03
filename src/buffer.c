@@ -60,7 +60,7 @@ static int compare_lua( lua_State *L )
                 return 1;
             }
             // alloc error
-            else if( !( buf = pnalloc( blen, char ) ) ){
+            else if( !( buf = pnalloc( blen + 1, char ) ) ){
                 lua_pushboolean( L, 0 );
                 lua_pushstring( L, strerror( errno ) );
                 return 2;
