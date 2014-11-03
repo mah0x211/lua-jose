@@ -26,7 +26,7 @@
  *
  */
 
-#include "jose.h"
+#include "jose_util.h"
 
 static int encode_lua( lua_State *L )
 {

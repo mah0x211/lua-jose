@@ -30,6 +30,7 @@
 #define ___JOSE_BUFFER_LUA___
 
 #include "jose.h"
+#include "jose_util.h"
 
 typedef struct {
     char *data;
