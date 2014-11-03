@@ -158,45 +158,6 @@ static int alloc_lua( lua_State *L )
 }
 
 
-static int gen_lua( lua_State *L )
-{
-    const char *name = luaL_checkstring( L, 1 );
-    size_t len = 0;
-    const char *msg = luaL_checklstring( L, 2, &len );
-    const EVP_MD *md = EVP_get_digestbyname( name );
-    unsigned char digest[EVP_MAX_MD_SIZE];
-    size_t dlen = 0;
-    char *data = NULL;
-    
-    // invalid digest name
-    if( !md ){
-        lua_pushnil( L );
-        lua_pushfstring( L, "unsupported digest algorithm: %s", name );
-        return 2;
-    }
-    else if( jose_digest( digest, &dlen, msg, len, md ) != 1 ){
-        lua_pushnil( L );
-        jose_push_sslerror( L );
-        return 2;
-    }
-    else if( !( data = pnalloc( dlen + 1, char ) ) ||
-             !jose_buffer_alloc( L, data, dlen ) )
-    {
-        lua_pushnil( L );
-        lua_pushstring( L, strerror( errno ) );
-        if( data ){
-            pdealloc( data );
-        }
-        return 2;
-    }
-    
-    memcpy( data, digest, dlen );
-    data[dlen] = 0;
-    
-    return 1;
-}
-
-
 static void add_digest_name( const EVP_MD *md, const char *from, const char *to,
                              void *arg )
 {
@@ -230,7 +191,6 @@ LUALIB_API int luaopen_jose_digest( lua_State *L )
     lua_newtable( L );
     EVP_MD_do_all_sorted( add_digest_name, (void*)L );
     lstate_fn2tbl( L, "new", alloc_lua );
-    lstate_fn2tbl( L, "gen", gen_lua );
     
     return 1;
 }
