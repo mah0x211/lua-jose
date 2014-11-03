@@ -704,6 +704,19 @@ static int alloc_lua( lua_State *L )
 }
 
 
+static void add_cipher_name( const EVP_CIPHER *ciph, const char *from, 
+                             const char *to, void *arg )
+{
+    if( !to ){
+        lua_State *L = (lua_State*)arg;
+        static char fname[255];
+        
+        jose_conv2constant_name( fname, from, strlen( from ) );
+        lstate_str2tbl( L, fname, from );
+    }
+}
+
+
 LUALIB_API int luaopen_jose_pkey( lua_State *L )
 {
     struct luaL_Reg mmethod[] = {
@@ -731,9 +744,11 @@ LUALIB_API int luaopen_jose_pkey( lua_State *L )
         { NULL, NULL }
     };
     
+    OpenSSL_add_all_ciphers();
     jose_define_mt( L, MODULE_MT, mmethod, method );
-    // add allocation method
+    
     lua_newtable( L );
+    EVP_CIPHER_do_all_sorted( add_cipher_name, (void*)L );
     lstate_fn2tbl( L, "new", alloc_lua );
     
     return 1;
