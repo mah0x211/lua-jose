@@ -199,71 +199,68 @@ static int gc_lua( lua_State *L )
 
 static int alloc_lua( lua_State *L )
 {
-    size_t len = 0;
-    const char *data = luaL_checklstring( L, 1, &len );
+    size_t rlen = 0;
+    const char *raw = luaL_checklstring( L, 1, &rlen );
     jose_fmt_e fmt = JOSE_FMT_RAW;
-    jose_buffer_t *j = NULL;
-    const char *errstr = NULL;
+    size_t len = rlen;
+    char *data = NULL;
     
     // check format
     if( lua_gettop( L ) > 1 && !lua_isnil( L, 2 ) ){
         fmt = luaL_checkint( L, 2 );
     }
     
-    if( !( j = lua_newuserdata( L, sizeof( jose_buffer_t ) ) ) ){
-        errstr = strerror( errno );
-    }
-    else if( fmt == JOSE_FMT_RAW )
+    switch( fmt )
     {
-        if( !( j->data = pnalloc( len + 1, char ) ) ){
-            errstr = strerror( errno );
-        }
-        else {
-            memcpy( j->data, data, len );
-            j->data[len] = 0;
-            j->len = len;
-        }
-    }
-    else if( fmt == JOSE_FMT_HEX )
-    {
-        if( len % 2 ){
-            errstr = "invalid data format";
-        }
-        else
-        {
-            j->len = len / 2;
-            if( !( j->data = pnalloc( j->len + 1, char ) ) ){
-                errstr = strerror( errno );
+        case JOSE_FMT_RAW:
+            if( !( data = pnalloc( len + 1, char ) ) ){
+                lua_pushnil( L );
+                lua_pushstring( L, strerror( errno ) );
+                return 2;
             }
-            else if( jose_hexdecode( j->data, (unsigned char*)data, len ) == -1 ){
-                errstr = strerror( errno );
-                pdealloc( j->data );
+            memcpy( data, raw, len );
+            data[len] = 0;
+        break;
+        
+        case JOSE_FMT_BASE64:
+        case JOSE_FMT_BASE64URL:
+            if( !( data = b64m_decode_mix( (unsigned char*)raw, &len ) ) ){
+                lua_pushnil( L );
+                lua_pushstring( L, strerror( errno ) );
+                return 2;
             }
-        }
-    }
-    else if( fmt == JOSE_FMT_BASE64 || fmt == JOSE_FMT_BASE64URL )
-    {
-        j->data = b64m_decode_mix( (unsigned char*)data, &len );
-        if( !j->data ){
-            errstr = strerror( errno );
-        }
-        else {
-            j->len = len;
-        }
-    }
-    // invalid format type
-    else {
-        errstr = "invalid format type";
+        break;
+        
+        case JOSE_FMT_HEX:
+            if( len % 2 ){
+                lua_pushnil( L );
+                lua_pushliteral( L, "invalid data format" );
+                return 2;
+            }
+            else if( !( data = pnalloc( ( len /= 2 ) + 1, char ) ) || 
+                     jose_hexdecode( data, (unsigned char*)raw, rlen ) == -1 )
+            {
+                lua_pushnil( L );
+                lua_pushstring( L, strerror( errno ) );
+                if( data ){
+                    pdealloc( data );
+                }
+                return 2;
+            }
+        break;
+        
+        // invalid format type
+        default:
+            lua_pushnil( L );
+            lua_pushliteral( L, "invalid format type" );
+            return 2;
     }
     
-    if( errstr ){
+    if( !jose_buffer_alloc( L, data, len ) ){
         lua_pushnil( L );
-        lua_pushstring( L, errstr );
+        lua_pushstring( L, strerror( errno ) );
         return 2;
     }
-    
-    luaL_getmetatable( L, MODULE_MT );
-    lua_setmetatable( L, -2 );
     
     return 1;
 }
