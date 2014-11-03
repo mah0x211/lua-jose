@@ -117,9 +117,6 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     // buffer
     luaopen_jose_buffer( L );
     lua_setfield( L, -2, "buffer" );
-    // base64
-    luaopen_jose_base64( L );
-    lua_setfield( L, -2, "base64" );
     // digest
     luaopen_jose_digest( L );
     lua_setfield( L, -2, "digest" );

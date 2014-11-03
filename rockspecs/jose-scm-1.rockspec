@@ -23,6 +23,11 @@ build = {
     type = "builtin",
     modules = {
         jose = "jose.lua",
+        ["jose.base64"] = {
+            sources = { 
+                "src/base64.c",
+            }
+        },
         ["jose.hex"] = {
             sources = { 
                 "src/hex.c",
