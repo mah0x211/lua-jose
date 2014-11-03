@@ -66,22 +66,6 @@ build = {
             libdirs = {
                 "$(OPENSSL_LIBDIR)"
             }
-        },
-        ["jose.lib"] = {
-            sources = { 
-                "src/lib.c",
-                "src/rsa.c",
-                "src/generate.c"
-            },
-            libraries = {
-                "ssl"
-            },
-            incdirs = {
-                "$(OPENSSL_INCDIR)"
-            },
-            libdirs = {
-                "$(OPENSSL_LIBDIR)"
-            }
         }
     }
 }
