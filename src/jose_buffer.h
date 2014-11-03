@@ -29,14 +29,31 @@
 #ifndef ___JOSE_BUFFER_LUA___
 #define ___JOSE_BUFFER_LUA___
 
-#include "jose.h"
 #include "jose_util.h"
+
+#define JOSE_BUFFER_MT   "jose.buffer"
 
 typedef struct {
     char *data;
     size_t len;
 } jose_buffer_t;
 
+LUALIB_API int luaopen_jose_buffer( lua_State *L );
+
+static inline jose_buffer_t *jose_buffer_alloc( lua_State *L, char *data, 
+                                                size_t len )
+{
+    jose_buffer_t *j = lua_newuserdata( L, sizeof( jose_buffer_t ) );
+    
+    if( j ){
+        j->data = data;
+        j->len = len;
+        luaL_getmetatable( L, JOSE_BUFFER_MT );
+        lua_setmetatable( L, -2 );
+    }
+    
+    return j;
+}
 
 #endif
 
