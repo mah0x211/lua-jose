@@ -19,20 +19,20 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  *  DEALINGS IN THE SOFTWARE.
  *
- *  buffer.c
+ *  bin.c
  *  lua-jose
  *
  *  Created by Masatoshi Teruya on 14/10/27.
  *
  */
 
-#include "jose_buffer.h"
+#include "jose_bin.h"
 
-#define MODULE_MT   JOSE_BUFFER_MT
+#define MODULE_MT   JOSE_BIN_MT
 
 static int compare_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     size_t len = 0;
     const char *data = luaL_checklstring( L, 2, &len );
     jose_fmt_e fmt = luaL_optint( L, 3, JOSE_FMT_RAW );
@@ -99,7 +99,7 @@ static int compare_lua( lua_State *L )
 
 static int tohex_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     
     if( jose_pushfmtstr( L, JOSE_FMT_HEX, (unsigned char*)j->data, 
                          j->len ) == -1 ){
@@ -114,7 +114,7 @@ static int tohex_lua( lua_State *L )
 
 static int tobase64_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     
     if( jose_pushfmtstr( L, JOSE_FMT_BASE64, (unsigned char*)j->data, 
                          j->len ) == -1 ){
@@ -129,7 +129,7 @@ static int tobase64_lua( lua_State *L )
 
 static int tobase64url_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     
     if( jose_pushfmtstr( L, JOSE_FMT_BASE64URL, (unsigned char*)j->data, 
                          j->len ) == -1 ){
@@ -144,7 +144,7 @@ static int tobase64url_lua( lua_State *L )
 
 static int eq_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     size_t len = 0;
     const char *str = NULL;
     
@@ -171,7 +171,7 @@ static int eq_lua( lua_State *L )
 
 static int tostring_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     
     lua_pushlstring( L, j->data, j->len );
     return 1;
@@ -180,7 +180,7 @@ static int tostring_lua( lua_State *L )
 
 static int len_lua( lua_State *L )
 {
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    jose_bin_t *j = luaL_checkudata( L, 1, MODULE_MT );
     
     lua_pushinteger( L, j->len );
     return 1;
@@ -189,7 +189,7 @@ static int len_lua( lua_State *L )
 
 static int gc_lua( lua_State *L )
 {
-    jose_buffer_t *j = lua_touserdata( L, 1 );
+    jose_bin_t *j = lua_touserdata( L, 1 );
     
     pdealloc( j->data );
     
@@ -256,7 +256,7 @@ static int alloc_lua( lua_State *L )
             return 2;
     }
     
-    if( !jose_buffer_alloc( L, data, len ) ){
+    if( !jose_bin_alloc( L, data, len ) ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
         return 2;
@@ -266,7 +266,7 @@ static int alloc_lua( lua_State *L )
 }
 
 
-LUALIB_API int luaopen_jose_buffer( lua_State *L )
+LUALIB_API int luaopen_jose_bin( lua_State *L )
 {
     struct luaL_Reg mmethod[] = {
         { "__gc", gc_lua },

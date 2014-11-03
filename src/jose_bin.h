@@ -19,36 +19,35 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  *  DEALINGS IN THE SOFTWARE.
  *
- *  jose_buffer.h
+ *  jose_bin.h
  *  lua-jose
  *
  *  Created by Masatoshi Teruya on 14/10/27.
  *
  */
 
-#ifndef ___JOSE_BUFFER_LUA___
-#define ___JOSE_BUFFER_LUA___
+#ifndef ___JOSE_BIN_LUA___
+#define ___JOSE_BIN_LUA___
 
 #include "jose_util.h"
 
-#define JOSE_BUFFER_MT   "jose.buffer"
+#define JOSE_BIN_MT   "jose.bin"
 
 typedef struct {
     char *data;
     size_t len;
-} jose_buffer_t;
+} jose_bin_t;
 
-LUALIB_API int luaopen_jose_buffer( lua_State *L );
+LUALIB_API int luaopen_jose_bin( lua_State *L );
 
-static inline jose_buffer_t *jose_buffer_alloc( lua_State *L, char *data, 
-                                                size_t len )
+static inline jose_bin_t *jose_bin_alloc( lua_State *L, char *data, size_t len )
 {
-    jose_buffer_t *j = lua_newuserdata( L, sizeof( jose_buffer_t ) );
+    jose_bin_t *j = lua_newuserdata( L, sizeof( jose_bin_t ) );
     
     if( j ){
         j->data = data;
         j->len = len;
-        luaL_getmetatable( L, JOSE_BUFFER_MT );
+        luaL_getmetatable( L, JOSE_BIN_MT );
         lua_setmetatable( L, -2 );
     }
     

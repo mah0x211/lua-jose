@@ -27,7 +27,7 @@
  */
 
 #include "jose_digest.h"
-#include "jose_buffer.h"
+#include "jose_bin.h"
 
 #define MODULE_MT   JOSE_DIGEST_MT
 
@@ -49,7 +49,7 @@ static int final_lua( lua_State *L )
         return 2;
     }
     else if( !( data = pnalloc( j->len + 1, char ) ) ||
-             !jose_buffer_alloc( L, data, j->len ) )
+             !jose_bin_alloc( L, data, j->len ) )
     {
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
@@ -211,7 +211,7 @@ LUALIB_API int luaopen_jose_digest( lua_State *L )
     };
     
     OpenSSL_add_all_digests();
-    luaopen_jose_buffer( L );
+    luaopen_jose_bin( L );
     jose_define_mt( L, MODULE_MT, mmethod, method );
     
     lua_newtable( L );
