@@ -28,23 +28,23 @@
 
 #include "jose_util.h"
 
-static int encode_lua( lua_State *L )
+#define encode_lua(L,fn) do { \
+    size_t len = 0; \
+    const char *str = luaL_checklstring( L, 1, &len ); \
+    char *b64 = fn( (unsigned char*)str, &len ); \
+    if( b64 ){ \
+        lua_pushlstring( L, b64, len ); \
+        pdealloc( b64 ); \
+        return 1; \
+    } \
+    lua_pushnil( L ); \
+    lua_pushstring( L, strerror( errno ) ); \
+    return 2; \
+}while(0)
+
+static int encode_std_lua( lua_State *L )
 {
-    size_t len = 0;
-    const char *str = luaL_checklstring( L, 1, &len );
-    char *b64 = b64m_encode_url( (unsigned char*)str, &len );
-    
-    if( b64 ){
-        lua_pushlstring( L, b64, len );
-        pdealloc( b64 );
-        return 1;
-    }
-    
-    // got error
-    lua_pushnil( L );
-    lua_pushstring( L, strerror( errno ) );
-    
-    return 2;
+    encode_lua( L, b64m_encode_std );
 }
 
 
@@ -72,7 +72,7 @@ LUALIB_API int luaopen_jose_base64( lua_State *L )
 {
     // utility functions
     lua_createtable( L, 0, 2 );
-    lstate_fn2tbl( L, "encode", encode_lua );
+    lstate_fn2tbl( L, "encode", encode_std_lua );
     lstate_fn2tbl( L, "decode", decode_lua );
     
     return 1;
