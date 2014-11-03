@@ -283,11 +283,18 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L )
         { NULL, NULL }
     };
     
-    jose_define_mt( L, MODULE_MT, mmethod, method );
-    // add allocation method
-    lua_pushcfunction( L, alloc_lua );
+    if( jose_define_mt( L, MODULE_MT, mmethod, method ) ){
+        lua_newtable( L );
+        lstate_fn2tbl( L, "new", alloc_lua );
+        // add format constants
+        lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
+        lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
+        lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
+        lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
+        return 1;
+    }
     
-    return 1;
+    return 0;
 }
 
 
