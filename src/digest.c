@@ -27,33 +27,40 @@
  */
 
 #include "jose_digest.h"
+#include "jose_buffer.h"
 
 #define MODULE_MT   JOSE_DIGEST_MT
+
+
+#define DIGEST_FINAL(j) \
+    (j->pk ? \
+    EVP_DigestSignFinal( j->ctx, j->digest, &j->len ) : \
+    EVP_DigestFinal_ex( j->ctx, j->digest, (unsigned int*)&j->len ) )
 
 
 static int final_lua( lua_State *L )
 {
     jose_digest_t *j = luaL_checkudata( L, 1, MODULE_MT );
-    jose_fmt_e fmt = jose_check_validfmt( L, 2, JOSE_FMT_HEX );
-    unsigned char digest[EVP_MAX_MD_SIZE];
-    size_t len = 0;
+    char *data = NULL;
     
-    // check format type
-    if( fmt == JOSE_FMT_INVAL ){
-        lua_pushnil( L );
-        lua_pushstring( L, "invalid format type" );
-        return 2;
-    }
-    else if( jose_digest_final( j, digest, &len ) == -1 ){
+    if( !j->len && DIGEST_FINAL( j ) != 1 ){
         lua_pushnil( L );
         jose_push_sslerror( L );
         return 2;
     }
-    else if( jose_pushfmtstr( L, fmt, digest, len ) == -1 ){
+    else if( !( data = pnalloc( j->len + 1, char ) ) ||
+             !jose_buffer_alloc( L, data, j->len ) )
+    {
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
+        if( data ){
+            pdealloc( data );
+        }
         return 2;
     }
+    
+    memcpy( data, j->digest, j->len );
+    data[j->len] = 0;
     
     return 1;
 }
@@ -65,7 +72,7 @@ static int update_lua( lua_State *L )
     size_t len = 0;
     const char *msg = luaL_checklstring( L, 2, &len );
     
-    if( !EVP_DigestUpdate( j->ctx, msg, len ) ){
+    if( EVP_DigestUpdate( j->ctx, msg, len ) != 1 ){
         lua_pushboolean( L, 0 );
         jose_push_sslerror( L );
         return 2;
@@ -88,6 +95,9 @@ static int gc_lua( lua_State *L )
     jose_digest_t *j = lua_touserdata( L, 1 );
     
     EVP_MD_CTX_destroy( j->ctx );
+    if( j->pk ){
+        EVP_PKEY_free( j->pk );
+    }
     
     return 0;
 }
@@ -96,6 +106,8 @@ static int gc_lua( lua_State *L )
 static int alloc_lua( lua_State *L )
 {
     const char *name = luaL_checkstring( L, 1 );
+    size_t klen = 0;
+    const char *key = luaL_optlstring( L, 2, NULL, &klen );
     const EVP_MD *md = EVP_get_digestbyname( name );
     jose_digest_t *j = NULL;
     
@@ -105,23 +117,40 @@ static int alloc_lua( lua_State *L )
         lua_pushfstring( L, "unsupported digest algorithm: %s", name );
         return 2;
     }
-    else if( !( j = lua_newuserdata( L, sizeof( jose_digest_t ) ) ) ){
+    else if( !( j = lua_newuserdata( L, sizeof( jose_digest_t ) ) ) ||
+             !( j->ctx = EVP_MD_CTX_create() ) ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
         return 2;
     }
-    else if( !( j->ctx = EVP_MD_CTX_create() ) ){
+    else if( !key )
+    {
+        j->pk = NULL;
+        if( !( EVP_DigestInit_ex( j->ctx, md, NULL ) ) ){
+            lua_pushnil( L );
+            jose_push_sslerror( L );
+            EVP_MD_CTX_destroy( j->ctx );
+            return 2;
+        }
+    }
+    // HMAC
+    else if( !( j->pk = EVP_PKEY_new_mac_key( EVP_PKEY_HMAC, NULL, 
+                                              (const unsigned char*)key, 
+                                              klen ) ) ){
         lua_pushnil( L );
         jose_push_sslerror( L );
-        return 2;
-    }
-    else if( !( EVP_DigestInit_ex( j->ctx, md, NULL ) ) ){
         EVP_MD_CTX_destroy( j->ctx );
-        lua_pushnil( L );
-        jose_push_sslerror( L );
         return 2;
     }
-            
+    else if( EVP_DigestSignInit( j->ctx, NULL, md, NULL, j->pk ) != 1 ){
+        lua_pushnil( L );
+        jose_push_sslerror( L );
+        EVP_MD_CTX_destroy( j->ctx );
+        EVP_PKEY_free( j->pk );
+        return 2;
+    }
+    
+    j->len = 0;
     luaL_getmetatable( L, MODULE_MT );
     lua_setmetatable( L, -2 );
     
@@ -134,19 +163,13 @@ static int gen_lua( lua_State *L )
     const char *name = luaL_checkstring( L, 1 );
     size_t len = 0;
     const char *msg = luaL_checklstring( L, 2, &len );
-    jose_fmt_e fmt = jose_check_validfmt( L, 3, JOSE_FMT_HEX );
     const EVP_MD *md = EVP_get_digestbyname( name );
     unsigned char digest[EVP_MAX_MD_SIZE];
     size_t dlen = 0;
+    char *data = NULL;
     
-    // invalid format type
-    if( fmt == JOSE_FMT_INVAL ){
-        lua_pushnil( L );
-        lua_pushstring( L, "invalid format type" );
-        return 2;
-    }
     // invalid digest name
-    else if( !md ){
+    if( !md ){
         lua_pushnil( L );
         lua_pushfstring( L, "unsupported digest algorithm: %s", name );
         return 2;
@@ -156,11 +179,19 @@ static int gen_lua( lua_State *L )
         jose_push_sslerror( L );
         return 2;
     }
-    else if( jose_pushfmtstr( L, fmt, digest, dlen ) == -1 ){
+    else if( !( data = pnalloc( dlen + 1, char ) ) ||
+             !jose_buffer_alloc( L, data, dlen ) )
+    {
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
+        if( data ){
+            pdealloc( data );
+        }
         return 2;
     }
+    
+    memcpy( data, digest, dlen );
+    data[dlen] = 0;
     
     return 1;
 }
@@ -193,6 +224,7 @@ LUALIB_API int luaopen_jose_digest( lua_State *L )
     };
     
     OpenSSL_add_all_digests();
+    luaopen_jose_buffer( L );
     jose_define_mt( L, MODULE_MT, mmethod, method );
     
     lua_newtable( L );

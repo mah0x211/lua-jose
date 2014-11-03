@@ -35,6 +35,9 @@
 
 typedef struct {
     EVP_MD_CTX *ctx;
+    EVP_PKEY *pk;
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    size_t len;
 } jose_digest_t;
 
 
