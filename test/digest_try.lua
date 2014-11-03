@@ -1,4 +1,4 @@
-local bin = require('jose.buffer');
+local bin = require('jose.bin');
 local digest = require('jose.digest');
 local FMT_HEX = bin.FMT_HEX;
 
