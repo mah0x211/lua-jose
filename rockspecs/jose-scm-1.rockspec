@@ -53,10 +53,23 @@ build = {
                 "$(OPENSSL_LIBDIR)"
             }
         },
+        ["jose.pkey"] = {
+            sources = { 
+                "src/pkey.c"
+            },
+            libraries = {
+                "ssl"
+            },
+            incdirs = {
+                "$(OPENSSL_INCDIR)"
+            },
+            libdirs = {
+                "$(OPENSSL_LIBDIR)"
+            }
+        },
         ["jose.lib"] = {
             sources = { 
                 "src/lib.c",
-                "src/pkey.c",
                 "src/rsa.c",
                 "src/generate.c"
             },

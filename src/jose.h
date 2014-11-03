@@ -36,10 +36,6 @@
 
 // MARK: define prototypes
 LUALIB_API int luaopen_jose_lib( lua_State *L );
-LUALIB_API int luaopen_jose_hex( lua_State *L );
-LUALIB_API int luaopen_jose_base64( lua_State *L );
-LUALIB_API int luaopen_jose_digest( lua_State *L );
-LUALIB_API int luaopen_jose_pkey( lua_State *L );
 LUALIB_API int luaopen_jose_rsa( lua_State *L );
 LUALIB_API int luaopen_jose_generate( lua_State *L );
 
