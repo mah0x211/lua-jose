@@ -24,7 +24,7 @@ end
 
 local function digest_hmac( src )
     local key = 'test key';
-    local d;
+    local d, b;
     
     for k, v in pairs({
         sha1    = { 
@@ -50,9 +50,19 @@ local function digest_hmac( src )
     }) do
         d = ifNil( digest.new( k, v.key ) );
         ifNotTrue( d:update( src ) );
-        d = ifNil( d:final() );
-        ifNotTrue( d:compare( v.res, FMT_HEX ) );
-        ifNotEqual( d:toHex(), v.res );
+        b = ifNil( d:final() );
+        ifNotTrue( b:compare( v.res, FMT_HEX ) );
+        ifNotEqual( b:toHex(), v.res );
+        
+        -- reset
+        ifNotTrue( d:reset() );
+        ifNotTrue( d:update( 'reset test' ) );
+        ifNotTrue( d:reset() );
+        ifNotTrue( d:update( src ) );
+        b = ifNil( d:final() );
+        ifNotTrue( b:compare( v.res, FMT_HEX ) );
+        ifNotEqual( b:toHex(), v.res );
+
     end
 end
 
