@@ -84,6 +84,30 @@ static int update_lua( lua_State *L )
 }
 
 
+static int reset_lua( lua_State *L )
+{
+    jose_digest_t *j = luaL_checkudata( L, 1, MODULE_MT );
+    
+    if( j->pk )
+    {
+        if( EVP_DigestSignInit( j->ctx, NULL, j->md, NULL, j->pk ) != 1 ){
+            lua_pushboolean( L, 0 );
+            jose_push_sslerror( L );
+            return 2;
+        }
+    }
+    else if( !( EVP_DigestInit_ex( j->ctx, j->md, NULL ) ) ){
+        lua_pushboolean( L, 0 );
+        jose_push_sslerror( L );
+        return 2;
+    }
+    
+    j->len = 0;
+    lua_pushboolean( L, 1 );
+    return 1;
+}
+
+
 static int tostring_lua( lua_State *L )
 {
     return jose_tostring( L, MODULE_MT );
@@ -150,6 +174,7 @@ static int alloc_lua( lua_State *L )
         return 2;
     }
     
+    j->md = md;
     j->len = 0;
     luaL_getmetatable( L, MODULE_MT );
     lua_setmetatable( L, -2 );
@@ -181,6 +206,7 @@ LUALIB_API int luaopen_jose_digest( lua_State *L )
     struct luaL_Reg method[] = {
         { "update", update_lua },
         { "final", final_lua },
+        { "reset", reset_lua },
         { NULL, NULL }
     };
     
