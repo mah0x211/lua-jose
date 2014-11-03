@@ -126,9 +126,6 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     // digest
     luaopen_jose_digest( L );
     lua_setfield( L, -2, "digest" );
-    // hmac
-    luaopen_jose_hmac( L );
-    lua_setfield( L, -2, "hmac" );
     // pkey
     luaopen_jose_pkey( L );
     lua_setfield( L, -2, "pkey" );

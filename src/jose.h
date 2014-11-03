@@ -101,7 +101,6 @@
 // define module names
 #define JOSE_BUFFER_MT  "jose.buffer"
 #define JOSE_DIGEST_MT  "jose.digest"
-#define JOSE_HMAC_MT    "jose.hmac"
 #define JOSE_PKEY_MT    "jose.pkey"
 #define JOSE_RSA_MT     "jose.rsa"
 
@@ -111,7 +110,6 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L );
 LUALIB_API int luaopen_jose_hex( lua_State *L );
 LUALIB_API int luaopen_jose_base64( lua_State *L );
 LUALIB_API int luaopen_jose_digest( lua_State *L );
-LUALIB_API int luaopen_jose_hmac( lua_State *L );
 LUALIB_API int luaopen_jose_pkey( lua_State *L );
 LUALIB_API int luaopen_jose_rsa( lua_State *L );
 LUALIB_API int luaopen_jose_generate( lua_State *L );
