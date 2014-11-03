@@ -306,8 +306,10 @@ static inline int get_rsa_component_lua( lua_State *L, EVP_PKEY *pk )
         set_b64component( rsa, iqmp, L ) == -1 ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
+        RSA_free( rsa );
         return 2;
     }
+    RSA_free( rsa );
     
     return 1;
 }
@@ -385,11 +387,13 @@ static inline int get_rsa_private_pem_lua( lua_State *L, EVP_PKEY *pk )
         if( jose_getopt_cipher( L, 2, &name, &ciph, &pswd, &len ) == -1 ){
             lua_pushnil( L );
             lua_pushfstring( L, "unsupported cipher: %s", name );
+            RSA_free( rsa );
             return 2;
         }
         else if( !( mem = BIO_new( BIO_s_mem() ) ) ){
             lua_pushnil( L );
             lua_pushstring( L, strerror( errno ) );
+            RSA_free( rsa );
             return 2;
         }
         else if( PEM_write_bio_RSAPrivateKey( mem, rsa, ciph, 
@@ -398,17 +402,20 @@ static inline int get_rsa_private_pem_lua( lua_State *L, EVP_PKEY *pk )
             lua_pushnil( L );
             jose_push_sslerror( L );
             BIO_free_all( mem );
+            RSA_free( rsa );
             return 2;
         }
         
         BIO_get_mem_ptr( mem, &ptr );
         lua_pushlstring( L, ptr->data, ptr->length );
         BIO_free_all( mem );
+        RSA_free( rsa );
         return 1;
     }
 
     lua_pushnil( L );
     lua_pushstring( L, "private key is not defined" );
+    RSA_free( rsa );
     
     return 2;
 }
@@ -430,11 +437,13 @@ static inline int get_dsa_private_pem_lua( lua_State *L, EVP_PKEY *pk )
         if( jose_getopt_cipher( L, 2, &name, &ciph, &pswd, &len ) == -1 ){
             lua_pushnil( L );
             lua_pushfstring( L, "unsupported cipher: %s", name );
+            DSA_free( dsa );
             return 2;
         }
         else if( !( mem = BIO_new( BIO_s_mem() ) ) ){
             lua_pushnil( L );
             lua_pushstring( L, strerror( errno ) );
+            DSA_free( dsa );
             return 2;
         }
         else if( PEM_write_bio_DSAPrivateKey( mem, dsa, ciph, 
@@ -443,17 +452,20 @@ static inline int get_dsa_private_pem_lua( lua_State *L, EVP_PKEY *pk )
             lua_pushnil( L );
             jose_push_sslerror( L );
             BIO_free_all( mem );
+            DSA_free( dsa );
             return 2;
         }
         
         BIO_get_mem_ptr( mem, &ptr );
         lua_pushlstring( L, ptr->data, ptr->length );
         BIO_free_all( mem );
+        DSA_free( dsa );
         return 1;
     }
 
     lua_pushnil( L );
     lua_pushstring( L, "private key is not defined" );
+    DSA_free( dsa );
     return 2;
 }
 
@@ -501,7 +513,7 @@ static inline int set_pem_lua( lua_State *L, pem_reader *reader )
         return 2;
     }
     else if( !( pk = reader( mem, NULL, NULL, pswd ) ) ){
-        BIO_free( mem );
+        BIO_free_all( mem );
         lua_pushboolean( L, 0 );
         jose_push_sslerror( L );
         return 2;
@@ -510,7 +522,7 @@ static inline int set_pem_lua( lua_State *L, pem_reader *reader )
         EVP_PKEY_free( j->pk );
     }
     
-    BIO_free( mem );
+    BIO_free_all( mem );
     j->pk = pk;
     lua_pushboolean( L, 1 );
     

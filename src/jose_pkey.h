@@ -46,16 +46,24 @@ static inline int jose_dsa_has_privatekey( DSA *dsa ){
 }
 static inline int jose_pkey_has_privatekey( EVP_PKEY *pk )
 {
+    int rc = 0;
+    RSA *rsa = NULL;
+    DSA *dsa = NULL;
+    
     switch( EVP_PKEY_type( pk->type ) ){
         case EVP_PKEY_RSA:
-            return jose_rsa_has_privatekey( EVP_PKEY_get1_RSA( pk ) );
+            rsa = EVP_PKEY_get1_RSA( pk );
+            rc = jose_rsa_has_privatekey( rsa );
+            RSA_free( rsa );
         break;
         case EVP_PKEY_DSA:
-            return jose_dsa_has_privatekey( EVP_PKEY_get1_DSA( pk ) );
+            dsa = EVP_PKEY_get1_DSA( pk );
+            rc = jose_dsa_has_privatekey( dsa );
+            DSA_free( dsa );
         break;
-        default:
-            return 0;
     }
+    
+    return rc;
 }
 
 
