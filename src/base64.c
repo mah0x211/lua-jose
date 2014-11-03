@@ -47,6 +47,11 @@ static int encode_std_lua( lua_State *L )
     encode_lua( L, b64m_encode_std );
 }
 
+static int encode_url_lua( lua_State *L )
+{
+    encode_lua( L, b64m_encode_url );
+}
+
 
 static int decode_lua( lua_State *L )
 {
@@ -73,6 +78,7 @@ LUALIB_API int luaopen_jose_base64( lua_State *L )
     // utility functions
     lua_createtable( L, 0, 2 );
     lstate_fn2tbl( L, "encode", encode_std_lua );
+    lstate_fn2tbl( L, "encodeURL", encode_url_lua );
     lstate_fn2tbl( L, "decode", decode_lua );
     
     return 1;
