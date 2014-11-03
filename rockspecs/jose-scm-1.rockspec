@@ -41,9 +41,6 @@ build = {
         ["jose.lib"] = {
             sources = { 
                 "src/lib.c",
-                "src/buffer.c",
-                "src/hex.c",
-                "src/base64.c",
                 "src/digest.c",
                 "src/pkey.c",
                 "src/rsa.c",
