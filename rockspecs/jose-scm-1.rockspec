@@ -33,6 +33,11 @@ build = {
                 "src/hex.c",
             }
         },
+        ["jose.buffer"] = {
+            sources = { 
+                "src/buffer.c",
+            }
+        },
         ["jose.lib"] = {
             sources = { 
                 "src/lib.c",
