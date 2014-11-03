@@ -97,25 +97,6 @@ static int compare_lua( lua_State *L )
 }
 
 
-static int convert_lua( lua_State *L )
-{
-    jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
-    jose_fmt_e fmt = JOSE_FMT_RAW;
-    
-    // check format
-    if( lua_gettop( L ) > 1 && !lua_isnil( L, 2 ) ){
-        fmt = luaL_checkint( L, 2 );
-    }
-    
-    if( jose_pushfmtstr( L, fmt, (unsigned char*)j->data, j->len ) == -1 ){
-        lua_pushnil( L );
-        lua_pushstring( L, "invalid format type" );
-        return 2;
-    }
-    
-    return 1;
-}
-
 static int tohex_lua( lua_State *L )
 {
     jose_buffer_t *j = luaL_checkudata( L, 1, MODULE_MT );
@@ -298,7 +279,6 @@ LUALIB_API int luaopen_jose_buffer( lua_State *L )
         { NULL, NULL }
     };
     struct luaL_Reg method[] = {
-        { "convert", convert_lua },
         { "toHex", tohex_lua },
         { "toBase64", tobase64_lua },
         { "toBase64URL", tobase64url_lua },
