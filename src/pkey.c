@@ -129,6 +129,7 @@ static int verify_lua( lua_State *L )
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
         if( ctx ){
+            EVP_MD_CTX_cleanup( ctx );
             EVP_MD_CTX_destroy( ctx );
         }
         return 2;
@@ -137,6 +138,7 @@ static int verify_lua( lua_State *L )
              EVP_VerifyUpdate( ctx, msg, len ) != 1 ){
         lua_pushboolean( L, 0 );
         jose_push_sslerror( L );
+        EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
         pdealloc( sig );
         return 2;
@@ -145,12 +147,14 @@ static int verify_lua( lua_State *L )
                                      j->pk ) ) < 0 ){
         lua_pushboolean( L, 0 );
         jose_push_sslerror( L );
+        EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
         pdealloc( sig );
         return 2;
     }
     
     lua_pushboolean( L, rc );
+    EVP_MD_CTX_cleanup( ctx );
     EVP_MD_CTX_destroy( ctx );
     pdealloc( sig );
     
@@ -191,6 +195,7 @@ static int sign_lua( lua_State *L )
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
         if( ctx ){
+            EVP_MD_CTX_cleanup( ctx );
             EVP_MD_CTX_destroy( ctx );
         }
         return 2;
@@ -200,6 +205,7 @@ static int sign_lua( lua_State *L )
              EVP_SignFinal( ctx, sig, (unsigned int*)&len, j->pk ) != 1 ){
         lua_pushnil( L );
         jose_push_sslerror( L );
+        EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
         pdealloc( sig );
         return 2;
@@ -207,12 +213,14 @@ static int sign_lua( lua_State *L )
     else if( !( b64sig = b64m_encode_url( sig, &len ) ) ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
+        EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
         pdealloc( sig );
         return 2;
     }
     
     lua_pushlstring( L, b64sig, len );
+    EVP_MD_CTX_cleanup( ctx );
     EVP_MD_CTX_destroy( ctx );
     pdealloc( sig );
     pdealloc( b64sig );
