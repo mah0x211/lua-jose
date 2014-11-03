@@ -30,30 +30,6 @@
 
 #define MODULE_MT   JOSE_PKEY_MT
 
-static void *check_privatekey( EVP_PKEY *pk )
-{
-    int type = EVP_PKEY_type( pk->type );
-    
-    // check key type
-    if( type == EVP_PKEY_RSA )
-    {
-        RSA *rsa = EVP_PKEY_get1_RSA( pk );
-        if( rsa->p && rsa->q ){
-            return (void*)rsa;
-        }
-    }
-    else if( type == EVP_PKEY_DSA )
-    {
-        DSA *dsa = EVP_PKEY_get1_DSA( pk );
-        if( dsa->priv_key ){
-            return dsa;
-        }
-    }
-    
-    return NULL;
-}
-
-
 static inline char *bignum64encode( BIGNUM *bn, int *len )
 {
     char *bn64 = NULL;
