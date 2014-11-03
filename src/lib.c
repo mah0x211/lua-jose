@@ -114,9 +114,6 @@ LUALIB_API int luaopen_jose_lib( lua_State *L )
     //OPENSSL_config( NULL );
     
     lua_newtable( L );
-    // digest
-    luaopen_jose_digest( L );
-    lua_setfield( L, -2, "digest" );
     // pkey
     luaopen_jose_pkey( L );
     lua_setfield( L, -2, "pkey" );

@@ -38,10 +38,24 @@ build = {
                 "src/buffer.c",
             }
         },
+        ["jose.digest"] = {
+            sources = { 
+                "src/buffer.c",
+                "src/digest.c"
+            },
+            libraries = {
+                "ssl"
+            },
+            incdirs = {
+                "$(OPENSSL_INCDIR)"
+            },
+            libdirs = {
+                "$(OPENSSL_LIBDIR)"
+            }
+        },
         ["jose.lib"] = {
             sources = { 
                 "src/lib.c",
-                "src/digest.c",
                 "src/pkey.c",
                 "src/rsa.c",
                 "src/generate.c"
