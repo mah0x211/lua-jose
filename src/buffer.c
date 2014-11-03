@@ -169,7 +169,7 @@ static int eq_lua( lua_State *L )
     
     switch( lua_type( L, 2 ) ){
         case LUA_TSTRING:
-            str = lua_tolstring( L, -1, &len );
+            str = lua_tolstring( L, 2, &len );
         break;
         case LUA_TUSERDATA:
             if( lua_getmetatable( L, 2 ) )
