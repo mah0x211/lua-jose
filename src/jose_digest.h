@@ -29,7 +29,9 @@
 #ifndef ___JOSE_DIGEST_LUA___
 #define ___JOSE_DIGEST_LUA___
 
-#include "jose.h"
+#include "jose_ssl.h"
+
+#define JOSE_DIGEST_MT  "jose.digest"
 
 typedef struct {
     EVP_MD_CTX *ctx;
