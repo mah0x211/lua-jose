@@ -211,7 +211,7 @@ LUALIB_API int luaopen_jose_digest( lua_State *L )
     };
     
     OpenSSL_add_all_digests();
-    luaopen_jose_bin( L );
+    jose_bin_define( L );
     jose_define_mt( L, MODULE_MT, mmethod, method );
     
     lua_newtable( L );
