@@ -201,14 +201,9 @@ static int alloc_lua( lua_State *L )
 {
     size_t rlen = 0;
     const char *raw = luaL_checklstring( L, 1, &rlen );
-    jose_fmt_e fmt = JOSE_FMT_RAW;
+    jose_fmt_e fmt = luaL_optint( L, 2, JOSE_FMT_RAW );
     size_t len = rlen;
     char *data = NULL;
-    
-    // check format
-    if( lua_gettop( L ) > 1 && !lua_isnil( L, 2 ) ){
-        fmt = luaL_checkint( L, 2 );
-    }
     
     switch( fmt )
     {
