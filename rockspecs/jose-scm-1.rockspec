@@ -55,6 +55,7 @@ build = {
         },
         ["jose.pkey"] = {
             sources = { 
+                "src/bin.c",
                 "src/pkey.c"
             },
             libraries = {

@@ -27,6 +27,7 @@
  */
 
 #include "jose_pkey.h"
+#include "jose_bin.h"
 
 #define MODULE_MT   JOSE_PKEY_MT
 
@@ -171,7 +172,6 @@ static int sign_lua( lua_State *L )
     const EVP_MD *md = EVP_get_digestbyname( name );
     unsigned char *sig = NULL;
     EVP_MD_CTX *ctx = NULL;
-    char *b64sig = NULL;
     
     // invalid digest name
     if( !md ){
@@ -210,7 +210,7 @@ static int sign_lua( lua_State *L )
         pdealloc( sig );
         return 2;
     }
-    else if( !( b64sig = b64m_encode_url( sig, &len ) ) ){
+    else if( !jose_bin_alloc( L, (char*)sig, len ) ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
         EVP_MD_CTX_cleanup( ctx );
@@ -219,11 +219,8 @@ static int sign_lua( lua_State *L )
         return 2;
     }
     
-    lua_pushlstring( L, b64sig, len );
     EVP_MD_CTX_cleanup( ctx );
     EVP_MD_CTX_destroy( ctx );
-    pdealloc( sig );
-    pdealloc( b64sig );
     
     return 1;
 }
@@ -741,6 +738,7 @@ LUALIB_API int luaopen_jose_pkey( lua_State *L )
     };
     
     OpenSSL_add_all_ciphers();
+    luaopen_jose_bin( L );
     jose_define_mt( L, MODULE_MT, mmethod, method );
     
     lua_newtable( L );
