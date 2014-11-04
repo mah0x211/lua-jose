@@ -38,6 +38,7 @@ typedef struct {
     size_t len;
 } jose_bin_t;
 
+void jose_bin_define( lua_State *L );
 LUALIB_API int luaopen_jose_bin( lua_State *L );
 
 static inline jose_bin_t *jose_bin_alloc( lua_State *L, char *data, size_t len )

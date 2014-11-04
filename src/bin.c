@@ -266,7 +266,7 @@ static int alloc_lua( lua_State *L )
 }
 
 
-LUALIB_API int luaopen_jose_bin( lua_State *L )
+void jose_bin_define( lua_State *L )
 {
     struct luaL_Reg mmethod[] = {
         { "__gc", gc_lua },
@@ -283,18 +283,23 @@ LUALIB_API int luaopen_jose_bin( lua_State *L )
         { NULL, NULL }
     };
     
-    if( jose_define_mt( L, MODULE_MT, mmethod, method ) ){
-        lua_newtable( L );
-        lstate_fn2tbl( L, "new", alloc_lua );
-        // add format constants
-        lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
-        lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
-        lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
-        lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
-        return 1;
-    }
+    jose_define_mt( L, MODULE_MT, mmethod, method );
+}
+
+
+LUALIB_API int luaopen_jose_bin( lua_State *L )
+{
+    jose_bin_define( L );
     
-    return 0;
+    lua_newtable( L );
+    lstate_fn2tbl( L, "new", alloc_lua );
+    // add format constants
+    lstate_num2tbl( L, "FMT_RAW", JOSE_FMT_RAW );
+    lstate_num2tbl( L, "FMT_HEX", JOSE_FMT_HEX );
+    lstate_num2tbl( L, "FMT_BASE64", JOSE_FMT_BASE64 );
+    lstate_num2tbl( L, "FMT_BASE64URL", JOSE_FMT_BASE64URL );
+    
+    return 1;
 }
 
 
