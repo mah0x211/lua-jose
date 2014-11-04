@@ -104,13 +104,11 @@ static int verify_lua( lua_State *L )
 {
     jose_pkey_t *j = luaL_checkudata( L, 1, MODULE_MT );
     const char *name = luaL_checkstring( L, 2 );
-    size_t slen = 0;
-    unsigned char *b64sig = (unsigned char*)luaL_checklstring( L, 3, &slen );
+    jose_bin_t *sig = luaL_checkudata( L, 3, JOSE_BIN_MT );
     size_t len = 0;
     const char *msg = luaL_checklstring( L, 4, &len );
     const EVP_MD *md = EVP_get_digestbyname( name );
     EVP_MD_CTX *ctx = NULL;
-    unsigned char *sig = NULL;
     int rc = 0;
     
     // invalid digest name
@@ -124,15 +122,9 @@ static int verify_lua( lua_State *L )
         lua_pushstring( L, "pkey is not initialized" );
         return 2;
     }
-    else if( !( ctx = EVP_MD_CTX_create() ) ||
-             !( sig = (unsigned char*)b64m_decode_url( b64sig, &slen ) ) )
-    {
+    else if( !( ctx = EVP_MD_CTX_create() ) ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
-        if( ctx ){
-            EVP_MD_CTX_cleanup( ctx );
-            EVP_MD_CTX_destroy( ctx );
-        }
         return 2;
     }
     else if( EVP_VerifyInit( ctx, md ) != 1 || 
@@ -141,23 +133,20 @@ static int verify_lua( lua_State *L )
         jose_push_sslerror( L );
         EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
-        pdealloc( sig );
         return 2;
     }
-    else if( ( rc = EVP_VerifyFinal( ctx, sig, (unsigned int)slen, 
-                                     j->pk ) ) < 0 ){
+    else if( ( rc = EVP_VerifyFinal( ctx, (const unsigned char*)sig->data, 
+                                     (unsigned int)sig->len, j->pk ) ) < 0 ){
         lua_pushboolean( L, 0 );
         jose_push_sslerror( L );
         EVP_MD_CTX_cleanup( ctx );
         EVP_MD_CTX_destroy( ctx );
-        pdealloc( sig );
         return 2;
     }
     
     lua_pushboolean( L, rc );
     EVP_MD_CTX_cleanup( ctx );
     EVP_MD_CTX_destroy( ctx );
-    pdealloc( sig );
     
     return 1;
 }
