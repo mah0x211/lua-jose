@@ -11,7 +11,8 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "lua-cjson >= 2.1.0"
+    "lua-cjson >= 2.1.0",
+    "lschema >= 1.0.1"
 }
 external_dependencies = {
     OPENSSL = {
@@ -23,6 +24,12 @@ build = {
     type = "builtin",
     modules = {
         jose = "jose.lua",
+        ["jose.util"] = "lib/util.lua",
+        ["jose.jwt"] = "lib/jwt.lua",
+        ["jose.jws"] = "lib/jws.lua",
+        ["jose.jws.rsa"] = "lib/jws/rsa.lua",
+        ["jose.jws.hmac"] = "lib/jws/hmac.lua",
+        ["jose.jws.none"] = "lib/jws/none.lua",
         ["jose.base64"] = {
             sources = { 
                 "src/base64.c",
