@@ -39,7 +39,7 @@ typedef struct {
 
 
 static inline int jose_rsa_has_privatekey( RSA *rsa ){
-    return ( rsa->p && rsa->q ) ? 1 : 0;
+    return ( rsa->n && rsa->e && rsa->d ) ? 1 : 0;
 }
 static inline int jose_dsa_has_privatekey( DSA *dsa ){ 
     return ( dsa->priv_key ) ? 1 : 0;
