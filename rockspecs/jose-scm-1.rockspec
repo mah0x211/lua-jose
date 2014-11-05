@@ -51,7 +51,8 @@ build = {
                 "src/digest.c"
             },
             libraries = {
-                "ssl"
+                "ssl",
+                "crypto"
             },
             incdirs = {
                 "$(OPENSSL_INCDIR)"
@@ -66,7 +67,8 @@ build = {
                 "src/pkey.c"
             },
             libraries = {
-                "ssl"
+                "ssl",
+                "crypto"
             },
             incdirs = {
                 "$(OPENSSL_INCDIR)"
