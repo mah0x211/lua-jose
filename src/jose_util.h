@@ -31,11 +31,11 @@
 #include "base64mix.h"
 #include <ctype.h>
 #include <errno.h>
-#include <lauxlib.h>
-#include <lua.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+// lualib
+#include <lauxhlib.h>
 
 // memory alloc/dealloc
 #define palloc(t)         (t *)malloc(sizeof(t))
@@ -43,47 +43,6 @@
 #define pcalloc(n, t)     (t *)calloc(n, sizeof(t))
 #define prealloc(n, t, p) (t *)realloc(p, (n) * sizeof(t))
 #define pdealloc(p)       (p ? free((void *)p) : NULL)
-
-// helper macros for lua_State
-#define lstate_setmetatable(L, tname)                                          \
-    (luaL_getmetatable(L, tname), lua_setmetatable(L, -2))
-
-#define lstate_ref(L, idx)                                                     \
-    (lua_pushvalue(L, idx), luaL_ref(L, LUA_REGISTRYINDEX))
-
-#define lstate_isref(ref) ((ref) > 0)
-
-#define lstate_pushref(L, ref) lua_rawgeti(L, LUA_REGISTRYINDEX, ref)
-
-#define lstate_unref(L, ref) luaL_unref(L, LUA_REGISTRYINDEX, ref)
-
-#define lstate_fn2tbl(L, k, v)                                                 \
-    do {                                                                       \
-        lua_pushstring(L, k);                                                  \
-        lua_pushcfunction(L, v);                                               \
-        lua_rawset(L, -3);                                                     \
-    } while (0)
-
-#define lstate_str2tbl(L, k, v)                                                \
-    do {                                                                       \
-        lua_pushstring(L, k);                                                  \
-        lua_pushstring(L, v);                                                  \
-        lua_rawset(L, -3);                                                     \
-    } while (0)
-
-#define lstate_strn2tbl(L, k, v, n)                                            \
-    do {                                                                       \
-        lua_pushstring(L, k);                                                  \
-        lua_pushlstring(L, v, n);                                              \
-        lua_rawset(L, -3);                                                     \
-    } while (0)
-
-#define lstate_num2tbl(L, k, v)                                                \
-    do {                                                                       \
-        lua_pushstring(L, k);                                                  \
-        lua_pushnumber(L, v);                                                  \
-        lua_rawset(L, -3);                                                     \
-    } while (0)
 
 // metanames
 // module definition register
@@ -94,7 +53,7 @@ static inline int jose_define_method(lua_State *L, struct luaL_Reg method[])
     // methods
     lua_newtable(L);
     do {
-        lstate_fn2tbl(L, ptr->name, ptr->func);
+        lauxh_pushfn2tbl(L, ptr->name, ptr->func);
         ptr++;
     } while (ptr->name);
 
@@ -111,7 +70,7 @@ static inline int jose_define_mt(lua_State *L, const char *tname,
 
         // metamethods
         do {
-            lstate_fn2tbl(L, ptr->name, ptr->func);
+            lauxh_pushfn2tbl(L, ptr->name, ptr->func);
             ptr++;
         } while (ptr->name);
         // methods
@@ -244,7 +203,7 @@ static inline jose_fmt_e jose_check_validfmt(lua_State *L, int idx,
                                              jose_fmt_e fmt)
 {
     // check format type
-    fmt = luaL_optint(L, idx, fmt);
+    fmt = lauxh_optint(L, idx, fmt);
     if (fmt < JOSE_FMT_HEX || fmt > JOSE_FMT_BASE64URL) {
         return JOSE_FMT_INVAL;
     }

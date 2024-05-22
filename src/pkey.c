@@ -84,7 +84,7 @@ static inline BIGNUM *bignum64decode(const unsigned char *src, size_t len)
             int len   = 0;                                                     \
             char *val = bignum64encode((ptr)->field, &len);                    \
             if (val) {                                                         \
-                lstate_str2tbl(L, #field, val);                                \
+                lauxh_pushstr2tbl(L, #field, val);                             \
                 pdealloc(val);                                                 \
             } else {                                                           \
                 rc = -1;                                                       \
@@ -637,7 +637,7 @@ static void add_cipher_name(const EVP_CIPHER *ciph, const char *from,
         static char fname[255];
 
         jose_conv2constant_name(fname, from, strlen(from));
-        lstate_str2tbl(L, fname, from);
+        lauxh_pushstr2tbl(L, fname, from);
     }
 }
 
@@ -674,7 +674,7 @@ LUALIB_API int luaopen_jose_pkey(lua_State *L)
 
     lua_newtable(L);
     EVP_CIPHER_do_all_sorted(add_cipher_name, (void *)L);
-    lstate_fn2tbl(L, "new", alloc_lua);
+    lauxh_pushfn2tbl(L, "new", alloc_lua);
 
     return 1;
 }

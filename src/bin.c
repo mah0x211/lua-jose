@@ -31,10 +31,10 @@
 
 static int compare_lua(lua_State *L)
 {
-    jose_bin_t *j    = luaL_checkudata(L, 1, MODULE_MT);
+    jose_bin_t *j    = lauxh_checkudata(L, 1, MODULE_MT);
     size_t len       = 0;
-    const char *data = luaL_checklstring(L, 2, &len);
-    jose_fmt_e fmt   = luaL_optint(L, 3, JOSE_FMT_RAW);
+    const char *data = lauxh_checklstr(L, 2, &len);
+    jose_fmt_e fmt   = lauxh_optint(L, 3, JOSE_FMT_RAW);
 
     if (fmt == JOSE_FMT_RAW) {
         lua_pushboolean(L, len == j->len && memcmp(data, j->data, j->len) == 0);
@@ -89,7 +89,7 @@ static int compare_lua(lua_State *L)
 
 static int tohex_lua(lua_State *L)
 {
-    jose_bin_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_bin_t *j = lauxh_checkudata(L, 1, MODULE_MT);
 
     if (jose_pushfmtstr(L, JOSE_FMT_HEX, (unsigned char *)j->data, j->len) ==
         -1) {
@@ -103,7 +103,7 @@ static int tohex_lua(lua_State *L)
 
 static int tobase64_lua(lua_State *L)
 {
-    jose_bin_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_bin_t *j = lauxh_checkudata(L, 1, MODULE_MT);
 
     if (jose_pushfmtstr(L, JOSE_FMT_BASE64, (unsigned char *)j->data, j->len) ==
         -1) {
@@ -117,7 +117,7 @@ static int tobase64_lua(lua_State *L)
 
 static int tobase64url_lua(lua_State *L)
 {
-    jose_bin_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_bin_t *j = lauxh_checkudata(L, 1, MODULE_MT);
 
     if (jose_pushfmtstr(L, JOSE_FMT_BASE64URL, (unsigned char *)j->data,
                         j->len) == -1) {
@@ -131,7 +131,7 @@ static int tobase64url_lua(lua_State *L)
 
 static int eq_lua(lua_State *L)
 {
-    jose_bin_t *j   = luaL_checkudata(L, 1, MODULE_MT);
+    jose_bin_t *j   = lauxh_checkudata(L, 1, MODULE_MT);
     size_t len      = 0;
     const char *str = NULL;
 
@@ -156,16 +156,14 @@ static int eq_lua(lua_State *L)
 
 static int tostring_lua(lua_State *L)
 {
-    jose_bin_t *j = luaL_checkudata(L, 1, MODULE_MT);
-
+    jose_bin_t *j = lauxh_checkudata(L, 1, MODULE_MT);
     lua_pushlstring(L, j->data, j->len);
     return 1;
 }
 
 static int len_lua(lua_State *L)
 {
-    jose_bin_t *j = luaL_checkudata(L, 1, MODULE_MT);
-
+    jose_bin_t *j = lauxh_checkudata(L, 1, MODULE_MT);
     lua_pushinteger(L, j->len);
     return 1;
 }
@@ -173,17 +171,15 @@ static int len_lua(lua_State *L)
 static int gc_lua(lua_State *L)
 {
     jose_bin_t *j = lua_touserdata(L, 1);
-
     pdealloc(j->data);
-
     return 0;
 }
 
 static int alloc_lua(lua_State *L)
 {
     size_t rlen     = 0;
-    const char *raw = luaL_checklstring(L, 1, &rlen);
-    jose_fmt_e fmt  = luaL_optint(L, 2, JOSE_FMT_RAW);
+    const char *raw = lauxh_checklstr(L, 1, &rlen);
+    jose_fmt_e fmt  = lauxh_optint(L, 2, JOSE_FMT_RAW);
     size_t len      = rlen;
     char *data      = NULL;
 
@@ -264,12 +260,12 @@ LUALIB_API int luaopen_jose_bin(lua_State *L)
     jose_bin_define(L);
 
     lua_newtable(L);
-    lstate_fn2tbl(L, "new", alloc_lua);
+    lauxh_pushfn2tbl(L, "new", alloc_lua);
     // add format constants
-    lstate_num2tbl(L, "FMT_RAW", JOSE_FMT_RAW);
-    lstate_num2tbl(L, "FMT_HEX", JOSE_FMT_HEX);
-    lstate_num2tbl(L, "FMT_BASE64", JOSE_FMT_BASE64);
-    lstate_num2tbl(L, "FMT_BASE64URL", JOSE_FMT_BASE64URL);
+    lauxh_pushint2tbl(L, "FMT_RAW", JOSE_FMT_RAW);
+    lauxh_pushint2tbl(L, "FMT_HEX", JOSE_FMT_HEX);
+    lauxh_pushint2tbl(L, "FMT_BASE64", JOSE_FMT_BASE64);
+    lauxh_pushint2tbl(L, "FMT_BASE64URL", JOSE_FMT_BASE64URL);
 
     return 1;
 }
