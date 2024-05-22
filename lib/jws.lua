@@ -25,6 +25,7 @@
 -- Created by Masatoshi Teruya on 14/11/04.
 --
 -- module
+local concat = table.concat
 local util = require('jose.util')
 -- constants
 local KTY = {
@@ -34,11 +35,65 @@ local KTY = {
     -- EC
 }
 
--- class
-local JWS = require('halo').class.JWS
+--- @class jose.jws
+--- @field alg string
+--- @field jwk table
+local JWS = {}
 
--- require: kty, alg
-function JWS.create(jwk)
+--- sign
+--- @param data string
+--- @return string signature
+--- @return any err
+function JWS:sign(data)
+    return nil
+end
+
+--- verify
+--- @return boolean ok
+--- @return any err
+function JWS:verify()
+    return true
+end
+
+--- createToken
+--- @param claims table
+--- @return string token
+--- @return any err
+function JWS:createToken(claims)
+    local arr = {}
+    local err
+
+    -- encode header
+    arr[1], err = util.encodeToken({
+        alg = self.jwk.alg,
+        kid = self.jwk.kid,
+    })
+    if err then
+        return nil, err
+    end
+
+    -- encode payload
+    arr[2], err = util.encodeToken(claims)
+    if err then
+        return nil, err
+    end
+
+    -- create signature
+    arr[3], err = self:sign(concat(arr, '.'))
+    if err then
+        return nil, err
+    end
+
+    return concat(arr, '.')
+end
+
+JWS = require('metamodule').new(JWS)
+
+--- create
+--- @param jwk table
+--- @return jose.jws jws
+--- @return any err
+local function create(jwk)
     if type(jwk) ~= 'table' then
         return nil, 'jwk must be table'
     elseif type(jwk.kty) ~= 'string' or type(jwk.alg) ~= 'string' then
@@ -48,34 +103,10 @@ function JWS.create(jwk)
     end
 
     -- create instance
-    return require(KTY[jwk.kty]).new(jwk)
+    return require(KTY[jwk.kty])(jwk)
 end
 
-function JWS:createToken(claims)
-    local own = protected(self)
-    local token = {}
-    local sig, err
-
-    token[1], err = util.encodeToken({
-        alg = self.jwk.alg,
-        kid = self.jwk.kid,
-    })
-    if err then
-        return nil, err
-    end
-
-    token[2], err = util.encodeToken(claims)
-    if err then
-        return nil, err
-    end
-
-    token[3], err = self:sign(table.concat(token, '.'))
-    if err then
-        return nil, err
-    end
-
-    return table.concat(token, '.')
-end
-
-return JWS.exports
+return {
+    create = create,
+}
 

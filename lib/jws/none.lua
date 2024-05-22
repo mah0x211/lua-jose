@@ -26,26 +26,37 @@
 --
 -- module
 local util = require('jose.util')
--- class
-local None = require('halo').class.None
 
+--- @class jose.jws.none
+local None = {}
+
+--- init
+--- @param jwk table
+--- @return jose.jws.none
 function None:init(jwk)
     self.jwk = jwk
     return self
 end
 
+--- sign
+--- @return nil
 function None:sign()
     return nil
 end
 
+--- verify
+--- @return boolean
 function None:verify()
     return true
 end
 
+--- createToken
+--- @param claims table
+--- @return string token
+--- @return any err
 function None:createToken(claims)
-    local own = protected(self)
     local token = {}
-    local sig, err
+    local err
 
     token[1], err = util.encodeToken({
         alg = 'none',
@@ -63,4 +74,5 @@ function None:createToken(claims)
     return table.concat(token, '.')
 end
 
-return None.exports
+None = require('metamodule').new(None)
+return None

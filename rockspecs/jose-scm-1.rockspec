@@ -12,6 +12,7 @@ description = {
 dependencies = {
     "lua >= 5.1",
     "lauxhlib >= 0.6.1",
+    "metamodule >= 0.5.0",
     "yyjson >= 0.8.0",
     "lschema >= 1.0.1",
 }
