@@ -25,13 +25,14 @@
 -- Created by Masatoshi Teruya on 14/11/04.
 --
 -- module
-local cjson = require('cjson.safe')
+local encodeJSON = require('yyjson').encode
+local decodeJSON = require('yyjson').decode
 local base64 = require('jose.base64')
 
 local function encodeToken(tbl)
     local err
 
-    tbl, err = cjson.encode(tbl)
+    tbl, err = encodeJSON(tbl)
     if err then
         return nil, err
     end
@@ -50,7 +51,7 @@ local function decodeToken(token)
     if err then
         return nil, err
     end
-    token, err = cjson.decode(token)
+    token, err = decodeJSON(token)
     if err then
         return nil, err
     end
