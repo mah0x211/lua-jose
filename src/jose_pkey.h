@@ -1,11 +1,11 @@
-/*
+/**
  *  Copyright 2014 Masatoshi Teruya. All rights reserved.
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a 
- *  copy of this software and associated documentation files (the "Software"), 
- *  to deal in the Software without restriction, including without limitation 
- *  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- *  and/or sell copies of the Software, and to permit persons to whom the 
+ *  Permission is hereby granted, free of charge, to any person obtaining a
+ *  copy of this software and associated documentation files (the "Software"),
+ *  to deal in the Software without restriction, including without limitation
+ *  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ *  and/or sell copies of the Software, and to permit persons to whom the
  *  Software is furnished to do so, subject to the following conditions:
  *
  *  The above copyright notice and this permission notice shall be included in
@@ -13,17 +13,16 @@
  *
  *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
  *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  *  DEALINGS IN THE SOFTWARE.
  *
  *  jose_pkey.h
  *  lua-jose
  *
  *  Created by Masatoshi Teruya on 14/10/27.
- *
  */
 
 #ifndef ___JOSE_PKEY_LUA___
@@ -31,43 +30,40 @@
 
 #include "jose_ssl.h"
 
-#define JOSE_PKEY_MT    "jose.pkey"
+#define JOSE_PKEY_MT "jose.pkey"
 
 typedef struct {
     EVP_PKEY *pk;
 } jose_pkey_t;
 
-
-static inline int jose_rsa_has_privatekey( RSA *rsa ){
-    return ( rsa->n && rsa->e && rsa->d ) ? 1 : 0;
-}
-static inline int jose_dsa_has_privatekey( DSA *dsa ){ 
-    return ( dsa->priv_key ) ? 1 : 0;
-}
-static inline int jose_pkey_has_privatekey( EVP_PKEY *pk )
+static inline int jose_rsa_has_privatekey(RSA *rsa)
 {
-    int rc = 0;
+    return (rsa->n && rsa->e && rsa->d) ? 1 : 0;
+}
+static inline int jose_dsa_has_privatekey(DSA *dsa)
+{
+    return (dsa->priv_key) ? 1 : 0;
+}
+static inline int jose_pkey_has_privatekey(EVP_PKEY *pk)
+{
+    int rc   = 0;
     RSA *rsa = NULL;
     DSA *dsa = NULL;
-    
-    switch( EVP_PKEY_type( pk->type ) ){
-        case EVP_PKEY_RSA:
-            rsa = EVP_PKEY_get1_RSA( pk );
-            rc = jose_rsa_has_privatekey( rsa );
-            RSA_free( rsa );
+
+    switch (EVP_PKEY_type(pk->type)) {
+    case EVP_PKEY_RSA:
+        rsa = EVP_PKEY_get1_RSA(pk);
+        rc  = jose_rsa_has_privatekey(rsa);
+        RSA_free(rsa);
         break;
-        case EVP_PKEY_DSA:
-            dsa = EVP_PKEY_get1_DSA( pk );
-            rc = jose_dsa_has_privatekey( dsa );
-            DSA_free( dsa );
+    case EVP_PKEY_DSA:
+        dsa = EVP_PKEY_get1_DSA(pk);
+        rc  = jose_dsa_has_privatekey(dsa);
+        DSA_free(dsa);
         break;
     }
-    
+
     return rc;
 }
 
-
 #endif
-
-
-
