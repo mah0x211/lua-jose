@@ -36,21 +36,14 @@ local ALG = {
     HS512 = digest.SHA512,
 }
 
--- class
-local HMAC = require('halo').class.HMAC
+--- @class jose.jws.hmac : jose.jws
+local HMAC = {}
 
-HMAC.inherits {
-    'jose.jws.JWS',
-    -- remove unused methods
-    except = {
-        static = {
-            'create',
-        },
-    },
-}
-
+--- init
+--- @param jwk table
+--- @return jose.jws.hmac hmac
+--- @return any err
 function HMAC:init(jwk)
-    local own = protected(self)
     local alg = ALG[jwk.alg]
     local engine, key, err
 
@@ -72,15 +65,18 @@ function HMAC:init(jwk)
     end
 
     self.jwk = jwk
-    own.alg = alg
-    own.engine = engine
-
+    self.alg = alg
+    self.engine = engine
     return self
 end
 
+--- verify
+--- @param data string
+--- @param sig string
+--- @return boolean ok
+--- @return any err
 function HMAC:verify(data, sig)
-    local own = protected(self)
-    local engine = own.engine
+    local engine = self.engine
     local ok, err = engine:reset()
     local bin
 
@@ -97,9 +93,12 @@ function HMAC:verify(data, sig)
     return ok, err
 end
 
+--- sign
+--- @param data string
+--- @return string sig
+--- @return any err
 function HMAC:sign(data)
-    local own = protected(self)
-    local engine = own.engine
+    local engine = self.engine
     local ok, err = engine:reset()
     local bin
 
@@ -116,5 +115,6 @@ function HMAC:sign(data)
     return bin, err
 end
 
-return HMAC.exports
+HMAC = require('metamodule').new(HMAC)
+return HMAC
 

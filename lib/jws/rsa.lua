@@ -35,21 +35,14 @@ local ALG = {
     RS384 = digest.SHA384,
     RS512 = digest.SHA512,
 }
--- class
-local RSA = require('halo').class.RSA
+--- @class jose.jws.rsa : jose.jws
+local RSA = {}
 
-RSA.inherits {
-    'jose.jws.JWS',
-    -- remove unused methods
-    except = {
-        static = {
-            'create',
-        },
-    },
-}
-
+--- init
+--- @param jwk table
+--- @return jose.jws.rsa
+--- @return any err
 function RSA:init(jwk)
-    local own = protected(self)
     local alg = ALG[jwk.alg]
     local engine, ok, err
 
@@ -67,27 +60,32 @@ function RSA:init(jwk)
     end
 
     self.jwk = jwk
-    own.alg = alg
-    own.engine = engine
-
+    self.alg = alg
+    self.engine = engine
     return self
 end
 
+--- verify
+--- @param data string
+--- @param sig string
+--- @return boolean ok
+--- @return any err
 function RSA:verify(data, sig)
-    local own = protected(self)
     local err
-
     sig, err = bin.new(sig, bin.FMT_BASE64URL)
     if err then
         return false, err
     end
 
-    return own.engine:verify(own.alg, sig, data)
+    return self.engine:verify(self.alg, sig, data)
 end
 
+--- sign
+--- @param data string
+--- @return string sig
+--- @return any err
 function RSA:sign(data)
-    local own = protected(self)
-    local sig, err = own.engine:sign(own.alg, data)
+    local sig, err = self.engine:sign(self.alg, data)
 
     if sig then
         sig, err = sig:toBase64URL()
@@ -96,4 +94,5 @@ function RSA:sign(data)
     return sig, err
 end
 
-return RSA.exports
+RSA = require('metamodule').new(RSA)
+return RSA
