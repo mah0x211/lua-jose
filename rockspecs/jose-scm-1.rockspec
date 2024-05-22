@@ -1,24 +1,25 @@
 package = "jose"
 version = "scm-1"
 source = {
-    url = "git://github.com/mah0x211/lua-jose.git"
+    url = "git://github.com/mah0x211/lua-jose.git",
 }
 description = {
     summary = "JOSE(JSON Object Signing and Encryption) module",
-    homepage = "https://github.com/mah0x211/lua-jose", 
+    homepage = "https://github.com/mah0x211/lua-jose",
     license = "MIT/X11",
-    maintainer = "Masatoshi Teruya"
+    maintainer = "Masatoshi Teruya",
 }
 dependencies = {
     "lua >= 5.1",
+    "lauxhlib >= 0.6.1",
     "lua-cjson >= 2.1.0",
-    "lschema >= 1.0.1"
+    "lschema >= 1.0.1",
 }
 external_dependencies = {
     OPENSSL = {
         header = "openssl/ssl.h",
-        library = "ssl"
-    }
+        library = "ssl",
+    },
 }
 build = {
     type = "builtin",
@@ -31,52 +32,52 @@ build = {
         ["jose.jws.hmac"] = "lib/jws/hmac.lua",
         ["jose.jws.none"] = "lib/jws/none.lua",
         ["jose.base64"] = {
-            sources = { 
+            sources = {
                 "src/base64.c",
-            }
+            },
         },
         ["jose.hex"] = {
-            sources = { 
+            sources = {
                 "src/hex.c",
-            }
+            },
         },
         ["jose.bin"] = {
-            sources = { 
+            sources = {
                 "src/bin.c",
-            }
+            },
         },
         ["jose.digest"] = {
-            sources = { 
+            sources = {
                 "src/bin.c",
-                "src/digest.c"
+                "src/digest.c",
             },
             libraries = {
                 "ssl",
-                "crypto"
+                "crypto",
             },
             incdirs = {
-                "$(OPENSSL_INCDIR)"
+                "$(OPENSSL_INCDIR)",
             },
             libdirs = {
-                "$(OPENSSL_LIBDIR)"
-            }
+                "$(OPENSSL_LIBDIR)",
+            },
         },
         ["jose.pkey"] = {
-            sources = { 
+            sources = {
                 "src/bin.c",
-                "src/pkey.c"
+                "src/pkey.c",
             },
             libraries = {
                 "ssl",
-                "crypto"
+                "crypto",
             },
             incdirs = {
-                "$(OPENSSL_INCDIR)"
+                "$(OPENSSL_INCDIR)",
             },
             libdirs = {
-                "$(OPENSSL_LIBDIR)"
-            }
-        }
-    }
+                "$(OPENSSL_LIBDIR)",
+            },
+        },
+    },
 }
 

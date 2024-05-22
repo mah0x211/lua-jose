@@ -30,7 +30,7 @@
 static int encode_lua(lua_State *L)
 {
     size_t len       = 0;
-    const char *src  = luaL_checklstring(L, 1, &len);
+    const char *src  = lauxh_checklstr(L, 1, &len);
     size_t dlen      = len * 2;
     const char *dest = pnalloc(dlen + 1, const char);
 
@@ -51,7 +51,7 @@ static int encode_lua(lua_State *L)
 static int decode_lua(lua_State *L)
 {
     size_t len         = 0;
-    unsigned char *src = (unsigned char *)luaL_checklstring(L, 1, &len);
+    unsigned char *src = (unsigned char *)lauxh_checklstr(L, 1, &len);
     size_t dlen        = len / 2;
     char *dest         = pnalloc(dlen + 1, char);
 
@@ -75,8 +75,8 @@ LUALIB_API int luaopen_jose_hex(lua_State *L)
 {
     // utility functions
     lua_createtable(L, 0, 2);
-    lstate_fn2tbl(L, "encode", encode_lua);
-    lstate_fn2tbl(L, "decode", decode_lua);
+    lauxh_pushfn2tbl(L, "encode", encode_lua);
+    lauxh_pushfn2tbl(L, "decode", decode_lua);
 
     return 1;
 }

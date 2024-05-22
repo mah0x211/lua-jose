@@ -46,8 +46,7 @@ static inline jose_bin_t *jose_bin_alloc(lua_State *L, char *data, size_t len)
     if (j) {
         j->data = data;
         j->len  = len;
-        luaL_getmetatable(L, JOSE_BIN_MT);
-        lua_setmetatable(L, -2);
+        lauxh_setmetatable(L, JOSE_BIN_MT);
     }
 
     return j;

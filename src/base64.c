@@ -30,7 +30,7 @@
 #define encode_lua(L, fn)                                                      \
     do {                                                                       \
         size_t len      = 0;                                                   \
-        const char *str = luaL_checklstring(L, 1, &len);                       \
+        const char *str = lauxh_checklstr(L, 1, &len);                         \
         char *b64       = fn((unsigned char *)str, &len);                      \
         if (b64) {                                                             \
             lua_pushlstring(L, b64, len);                                      \
@@ -55,7 +55,7 @@ static int encode_url_lua(lua_State *L)
 static int decode_lua(lua_State *L)
 {
     size_t len      = 0;
-    const char *b64 = luaL_checklstring(L, 1, &len);
+    const char *b64 = lauxh_checklstr(L, 1, &len);
     char *str       = b64m_decode_mix((unsigned char *)b64, &len);
 
     if (str) {
@@ -67,7 +67,6 @@ static int decode_lua(lua_State *L)
     // got error
     lua_pushnil(L);
     lua_pushstring(L, strerror(errno));
-
     return 2;
 }
 
@@ -75,9 +74,9 @@ LUALIB_API int luaopen_jose_base64(lua_State *L)
 {
     // utility functions
     lua_createtable(L, 0, 2);
-    lstate_fn2tbl(L, "encode", encode_std_lua);
-    lstate_fn2tbl(L, "encodeURL", encode_url_lua);
-    lstate_fn2tbl(L, "decode", decode_lua);
+    lauxh_pushfn2tbl(L, "encode", encode_std_lua);
+    lauxh_pushfn2tbl(L, "encodeURL", encode_url_lua);
+    lauxh_pushfn2tbl(L, "decode", decode_lua);
 
     return 1;
 }

@@ -36,7 +36,7 @@
 
 static int final_lua(lua_State *L)
 {
-    jose_digest_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_digest_t *j = lauxh_checkudata(L, 1, MODULE_MT);
     char *data       = NULL;
 
     if (!j->len && DIGEST_FINAL(j) != 1) {
@@ -61,9 +61,9 @@ static int final_lua(lua_State *L)
 
 static int update_lua(lua_State *L)
 {
-    jose_digest_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_digest_t *j = lauxh_checkudata(L, 1, MODULE_MT);
     size_t len       = 0;
-    const char *msg  = luaL_checklstring(L, 2, &len);
+    const char *msg  = lauxh_checklstr(L, 2, &len);
 
     if (EVP_DigestUpdate(j->ctx, msg, len) != 1) {
         lua_pushboolean(L, 0);
@@ -78,7 +78,7 @@ static int update_lua(lua_State *L)
 
 static int reset_lua(lua_State *L)
 {
-    jose_digest_t *j = luaL_checkudata(L, 1, MODULE_MT);
+    jose_digest_t *j = lauxh_checkudata(L, 1, MODULE_MT);
 
     if (j->pk) {
         if (EVP_DigestSignInit(j->ctx, NULL, j->md, NULL, j->pk) != 1) {
@@ -116,9 +116,9 @@ static int gc_lua(lua_State *L)
 
 static int alloc_lua(lua_State *L)
 {
-    const char *name = luaL_checkstring(L, 1);
+    const char *name = lauxh_checkstr(L, 1);
     size_t klen      = 0;
-    const char *key  = luaL_optlstring(L, 2, NULL, &klen);
+    const char *key  = lauxh_optlstr(L, 2, NULL, &klen);
     const EVP_MD *md = EVP_get_digestbyname(name);
     jose_digest_t *j = NULL;
 
@@ -158,8 +158,7 @@ static int alloc_lua(lua_State *L)
 
     j->md  = md;
     j->len = 0;
-    luaL_getmetatable(L, MODULE_MT);
-    lua_setmetatable(L, -2);
+    lauxh_setmetatable(L, MODULE_MT);
 
     return 1;
 }
@@ -172,7 +171,7 @@ static void add_digest_name(const EVP_MD *md, const char *from, const char *to,
         static char fname[255];
 
         jose_conv2constant_name(fname, from, strlen(from));
-        lstate_str2tbl(L, fname, from);
+        lauxh_pushstr2tbl(L, fname, from);
     }
 }
 
@@ -196,7 +195,7 @@ LUALIB_API int luaopen_jose_digest(lua_State *L)
 
     lua_newtable(L);
     EVP_MD_do_all_sorted(add_digest_name, (void *)L);
-    lstate_fn2tbl(L, "new", alloc_lua);
+    lauxh_pushfn2tbl(L, "new", alloc_lua);
 
     return 1;
 }
